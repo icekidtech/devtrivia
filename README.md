@@ -50,7 +50,7 @@ devtrivia/
 ## 🚀 Quick Start  
 ### 1. Clone & Install  
 ```bash
-git clone https://github.com/your-username/devtrivia.git
+git clone https://github.com/icekidtech/devtrivia.git
 cd devtrivia
 cd backend && npm install
 cd ../frontend && npm install
