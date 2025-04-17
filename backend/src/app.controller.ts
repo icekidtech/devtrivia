@@ -10,3 +10,9 @@ export class AppController {
     return this.appService.getHello();
   }
 }
+
+// Endpoint test
+@Get('/api/test')
+getTest() {
+  return { message: 'Backend connected!' };
+}
