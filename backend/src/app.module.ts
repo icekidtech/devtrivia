@@ -5,7 +5,7 @@ import { PrismaService } from './prisma/prisma.service';
 import { QuizController } from './quizzes/quiz.controller';
 import { QuizService } from './quizzes/quiz.service';
 import { UserController } from './users/user.controller';
-import { QuestionController } from './questions/question.controller';
+import { QuestionController } from './questions/controllers/question.controller';
 import { QuestionService } from './questions/question.service';
 import { AnswerController } from './answers/answer.controller';
 import { AnswerService } from './answers/answer.service';

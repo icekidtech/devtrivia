@@ -12,6 +12,7 @@ export class UserController {
         data: {
           email: body.email,
           name: body.name,
+          password: 'defaultPassword123', // Replace with a secure password or hash
         },
       });
     } catch (error) {
