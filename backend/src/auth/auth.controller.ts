@@ -1,7 +1,9 @@
-import { Body, Controller, Post, ConflictException, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Post, Patch, ConflictException, UnauthorizedException, UseGuards, Get } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { Roles } from './roles.decorator';
+import { RoleGuard } from './role.guard'; // Adjust the path if necessary
 
 @Controller('auth')
 export class AuthController {
@@ -45,5 +47,35 @@ export class AuthController {
 
     const token = this.jwtService.sign({ id: user.id, role: user.role });
     return { token };
+  }
+
+  @Patch('reset-password')
+  async resetPassword(@Body() body: { email: string; newPassword: string }) {
+    const hashedPassword = await bcrypt.hash(body.newPassword, 10);
+
+    return this.prisma.user.update({
+      where: { email: body.email },
+      data: { password: hashedPassword },
+    });
+  }
+}
+
+@Controller('admin')
+@UseGuards(RoleGuard)
+export class AdminController {
+  @Get('dashboard')
+  @Roles('ADMIN')
+  getDashboard() {
+    return 'Admin Dashboard';
+  }
+}
+
+@Controller('user')
+@UseGuards(RoleGuard)
+export class UserController {
+  @Get('dashboard')
+  @Roles('USER')
+  getDashboard() {
+    return 'User Dashboard';
   }
 }
