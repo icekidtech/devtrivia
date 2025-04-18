@@ -49,3 +49,13 @@ enum Role {
   MODERATOR
   ADMIN
 }
+
+if (existingQuestion) {
+  console.log('Reusing existing question:', existingQuestion.id);
+  return existingQuestion;
+}
+
+console.log('Creating a new question:', data.text);
+return this.prisma.question.create({
+  data,
+});
