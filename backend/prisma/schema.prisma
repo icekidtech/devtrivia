@@ -33,6 +33,8 @@ model Question {
   quiz      Quiz     @relation(fields: [quizId], references: [id])
   answers   Answer[]
   correctId String?
+
+  @@unique([text, quizId]) // Add a unique constraint
 }
 
 model Answer {
