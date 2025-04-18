@@ -6,12 +6,10 @@ export class QuizService {
   constructor(private prisma: PrismaService) {}
 
   async createQuiz(data: { title: string; description?: string; ownerId: string }) {
-    return this.prisma.quiz.create({
-      data,
-    });
+    return this.prisma.quiz.create({ data });
   }
 
-  async getQuizzes() {
+  async getAllQuizzes() {
     return this.prisma.quiz.findMany({
       include: { questions: true },
     });
