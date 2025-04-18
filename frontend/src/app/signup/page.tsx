@@ -17,7 +17,13 @@ export default function SignupPage() {
       await signup(formData);
       setMessage('Signup successful! You can now log in.');
     } catch (error: any) {
-      setMessage(error.message || 'Signup failed.');
+      if (error.message.includes('User with this email already exists')) {
+        setMessage('This email is already registered. Please use a different email.');
+      } else if (error.message.includes('User with this username already exists')) {
+        setMessage('This username is already taken. Please choose another.');
+      } else {
+        setMessage('Signup failed. Please try again.');
+      }
     }
   };
 
