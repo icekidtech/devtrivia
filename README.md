@@ -3,6 +3,21 @@
 
 ![DevTrivia Demo](https://via.placeholder.com/800x400?text=DevTrivia+Demo+GIF+Here)  
 
+## Table of Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Quick Start](#quick-start)
+- [API Endpoints (Backend)](#api-endpoints-backend)
+- [Frontend Routes](#frontend-routes)
+- [Scripts](#scripts)
+- [Environment Variables](#environment-variables)
+- [Debugging Tips](#debugging-tips)
+- [Roadmap](#roadmap)
+- [License](#license)
+- [Owner](#owner)
+
 ## 🌟 Features  
 - **🎯 Guest Mode**: Join quizzes without signing up.  
 - **⚡ Real-Time Play**: Live leaderboard, WebSockets, and dynamic scoring.  
@@ -143,7 +158,7 @@ NEXTAUTH_SECRET="same-as-jwt-secret"
 ---
 
 ## 📜 License  
-MIT  
+[MIT](#license)  
 
 ## 🙌 Owner  
-- [Udoh Idopise Edwin](https://github.com/icekidtech)  
+- [Udoh Idopise Edwin](https://github.com/icekidtech)
