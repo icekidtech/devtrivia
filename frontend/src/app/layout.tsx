@@ -28,10 +28,20 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <nav>
-          <Link href="/signup">Signup</Link> | <Link href="/login">Login</Link>
-        </nav>
-        {children}
+        <header className="bg-primary text-white py-4">
+          <div className="container mx-auto flex justify-between items-center">
+            <h1 className="text-2xl font-bold">DevTrivia</h1>
+            <nav>
+              <Link href="/signup" className="px-4 py-2 hover:underline">
+                Signup
+              </Link>
+              <Link href="/login" className="px-4 py-2 hover:underline">
+                Login
+              </Link>
+            </nav>
+          </div>
+        </header>
+        <main className="container mx-auto py-8">{children}</main>
       </body>
     </html>
   );

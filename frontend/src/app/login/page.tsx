@@ -25,14 +25,33 @@ export default function LoginPage() {
   };
 
   return (
-    <div>
-      <h1>Login</h1>
-      <form onSubmit={handleSubmit}>
-        <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
-        <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
-        <button type="submit">Login</button>
+    <div className="max-w-md mx-auto bg-white shadow-md rounded-lg p-6">
+      <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          onChange={handleChange}
+          required
+          className="w-full px-4 py-2 border rounded-md"
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          onChange={handleChange}
+          required
+          className="w-full px-4 py-2 border rounded-md"
+        />
+        <button
+          type="submit"
+          className="w-full bg-primary text-white py-2 rounded-md hover:bg-primary-dark"
+        >
+          Login
+        </button>
       </form>
-      {message && <p>{message}</p>}
+      {message && <p className="mt-4 text-center text-secondary">{message}</p>}
     </div>
   );
 }
