@@ -18,7 +18,7 @@ export class AuthController {
         data: {
           email: body.email,
           name: body.name,
-          password: hashedPassword, // Ensure this field exists in the Prisma schema
+          password: hashedPassword,
           role: body.role,
         },
       });

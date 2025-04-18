@@ -9,6 +9,7 @@ import { QuestionController } from './questions/question.controller';
 import { QuestionService } from './questions/question.service';
 import { AnswerController } from './answers/answer.controller';
 import { AnswerService } from './answers/answer.service';
+import { AuthController } from './auth/auth.controller';
 
 @Module({
   imports: [],
@@ -18,6 +19,7 @@ import { AnswerService } from './answers/answer.service';
     UserController,
     QuestionController,
     AnswerController,
+    AuthController,
   ],
   providers: [
     AppService,
