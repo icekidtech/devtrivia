@@ -7,14 +7,17 @@ import { RoleGuard } from './role.guard'; // Adjust the path if necessary
 
 @Controller('auth')
 export class AuthController {
-  constructor(private prisma: PrismaService, private jwtService: JwtService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService, // Inject JwtService
+  ) {}
 
   @Post('signup')
   async signup(@Body() body: { email: string; name: string; password: string; role: 'ADMIN' | 'MODERATOR' | 'USER' }) {
     const hashedPassword = await bcrypt.hash(body.password, 10);
 
     try {
-      return await this.prisma.user.create({
+      const user = await this.prisma.user.create({
         data: {
           email: body.email,
           name: body.name,
@@ -22,6 +25,10 @@ export class AuthController {
           role: body.role,
         },
       });
+
+      // Generate a JWT token for the user
+      const token = this.jwtService.sign({ id: user.id, role: user.role });
+      return { user, token };
     } catch (error) {
       if (error.code === 'P2002') {
         if (error.meta?.target?.includes('email')) {
