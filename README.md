@@ -145,5 +145,5 @@ NEXTAUTH_SECRET="same-as-jwt-secret"
 ## 📜 License  
 MIT  
 
-## 🙌 Contributors  
+## 🙌 Owner  
 - [Udoh Idopise Edwin](https://github.com/icekidtech)  
