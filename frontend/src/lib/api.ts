@@ -1,5 +1,7 @@
 export async function fetchBackend(endpoint: string, options?: RequestInit) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}${endpoint}`, options);
+  const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}${endpoint}`;
+  console.log('Fetching URL:', url); // Debug log
+  const res = await fetch(url, options);
   if (!res.ok) {
     throw new Error(`Failed to fetch ${endpoint}: ${res.statusText}`);
   }
