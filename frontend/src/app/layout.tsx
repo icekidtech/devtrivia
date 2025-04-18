@@ -1,6 +1,9 @@
+'use client';
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,6 +26,25 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    // Simulate fetching user data from localStorage or an API
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user?.name) {
+      setIsLoggedIn(true);
+      setUserName(user.name);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user'); // Clear user data
+    setIsLoggedIn(false);
+    setUserName('');
+    window.location.href = '/login'; // Redirect to login page
+  };
+
   return (
     <html lang="en">
       <body
@@ -32,18 +54,35 @@ export default function RootLayout({
           <div className="container mx-auto flex justify-between items-center">
             <h1 className="text-2xl font-bold">DevTrivia</h1>
             <nav className="space-x-4">
-              <Link href="/" className="hover:underline">
-                Home
-              </Link>
-              <Link href="/about" className="hover:underline">
-                About Us
-              </Link>
-              <Link href="/signup" className="hover:underline">
-                Signup
-              </Link>
-              <Link href="/login" className="hover:underline">
-                Login
-              </Link>
+              {!isLoggedIn ? (
+                <>
+                  <Link href="/" className="hover:underline">
+                    Home
+                  </Link>
+                  <Link href="/about" className="hover:underline">
+                    About Us
+                  </Link>
+                  <Link href="/signup" className="hover:underline">
+                    Signup
+                  </Link>
+                  <Link href="/login" className="hover:underline">
+                    Login
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <span className="font-semibold">Welcome, {userName}!</span>
+                  <Link href="/dashboard" className="hover:underline">
+                    Dashboard
+                  </Link>
+                  <Link href="/profile" className="hover:underline">
+                    Profile
+                  </Link>
+                  <button onClick={handleLogout} className="hover:underline">
+                    Logout
+                  </button>
+                </>
+              )}
             </nav>
           </div>
         </header>
