@@ -6,6 +6,7 @@ export class QuestionService {
   constructor(private prisma: PrismaService) {}
 
   async createQuestion(data: { text: string; quizId: string }) {
+    // Check if the quiz exists
     const quizExists = await this.prisma.quiz.findUnique({
       where: { id: data.quizId },
     });
@@ -14,6 +15,20 @@ export class QuestionService {
       throw new Error('Quiz does not exist');
     }
 
+    // Check if the question already exists for the same quiz
+    const existingQuestion = await this.prisma.question.findFirst({
+      where: {
+        text: data.text,
+        quizId: data.quizId,
+      },
+    });
+
+    if (existingQuestion) {
+      // Return the existing question if it already exists
+      return existingQuestion;
+    }
+
+    // Create a new question if it doesn't exist
     return this.prisma.question.create({
       data,
     });
