@@ -1,10 +1,11 @@
-import { Body, Controller, Post, ConflictException } from '@nestjs/common';
+import { Body, Controller, Post, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private jwtService: JwtService) {}
 
   @Post('signup')
   async signup(@Body() body: { email: string; name: string; password: string; role: 'ADMIN' | 'MODERATOR' | 'USER' }) {
@@ -30,5 +31,19 @@ export class AuthController {
       }
       throw error;
     }
+  }
+
+  @Post('login')
+  async login(@Body() body: { email: string; password: string }) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: body.email },
+    });
+
+    if (!user || !(await bcrypt.compare(body.password, user.password))) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    const token = this.jwtService.sign({ id: user.id, role: user.role });
+    return { token };
   }
 }
