@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, NotFoundException } from '@nestjs/common';
 import { QuizService } from './quiz.service';
 
 @Controller('quizzes')
@@ -17,7 +17,11 @@ export class QuizController {
 
   @Get(':id')
   async getQuizById(@Param('id') id: string) {
-    return this.quizService.getQuizById(id);
+    try {
+      return await this.quizService.getQuizById(id);
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
   }
 
   @Delete(':id')
