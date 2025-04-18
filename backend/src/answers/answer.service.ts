@@ -6,6 +6,8 @@ export class AnswerService {
   constructor(private prisma: PrismaService) {}
 
   async createAnswer(data: { text: string; questionId: string }) {
+    console.log('Incoming data:', data); // Debug log
+
     const questionExists = await this.prisma.question.findUnique({
       where: { id: data.questionId },
     });

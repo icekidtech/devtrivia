@@ -1,12 +1,13 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { AnswerService } from './answer.service';
+import { CreateAnswerDto } from './dto/create-answer.dto';
 
 @Controller('answers')
 export class AnswerController {
   constructor(private readonly answerService: AnswerService) {}
 
   @Post()
-  async createAnswer(@Body() body: { text: string; questionId: string }) {
+  async createAnswer(@Body() body: CreateAnswerDto) {
     return this.answerService.createAnswer(body);
   }
 
