@@ -10,8 +10,9 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
-  name      String?  @unique // Add unique constraint here
-  role      Role     @default(USER)
+  name      String?  @unique
+  password  String
+  role      Role     @default(USER) // Add role field
   createdAt DateTime @default(now())
   quizzes   Quiz[]
 }
@@ -45,7 +46,7 @@ model Answer {
 }
 
 enum Role {
-  USER
-  MODERATOR
   ADMIN
+  MODERATOR
+  USER
 }
