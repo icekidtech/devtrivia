@@ -35,4 +35,11 @@ export class QuizService {
       where: { id },
     });
   }
+
+  async updateQuiz(id: string, data: { title?: string; description?: string }) {
+    return this.prisma.quiz.update({
+      where: { id },
+      data,
+    });
+  }
 }
