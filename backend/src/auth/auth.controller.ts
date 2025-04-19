@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Patch, ConflictException, UnauthorizedException, UseGuards, Get, Param } from '@nestjs/common';
+import { Body, Controller, Post, Patch, ConflictException, UnauthorizedException, UseGuards, Get, Param, Delete } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -91,6 +91,12 @@ export class AdminController {
       where: { id },
       data,
     });
+  }
+
+  @Delete('users/:id')
+  @Roles('ADMIN')
+  async deleteUser(@Param('id') id: string) {
+    return this.prisma.user.delete({ where: { id } });
   }
 
   // Repeat similar for quizzes, questions, answers
