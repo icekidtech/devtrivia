@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsString, IsBoolean } from 'class-validator';
 
 export class CreateAnswerDto {
   @IsString()
@@ -6,4 +6,7 @@ export class CreateAnswerDto {
 
   @IsString()
   questionId: string;
+
+  @IsBoolean()
+  isCorrect: boolean;
 }

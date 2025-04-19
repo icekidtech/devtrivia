@@ -45,6 +45,7 @@ model Answer {
   text       String
   questionId String
   question   Question @relation(fields: [questionId], references: [id])
+  isCorrect  Boolean  @default(false)
 }
 
 model Result {

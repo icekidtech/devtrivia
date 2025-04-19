@@ -12,6 +12,10 @@ export default function ModeratorDashboardClient() {
   const [loading, setLoading] = useState(true);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [selectedQuiz, setSelectedQuiz] = useState<string | null>(null);
+  const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
+  const [questionText, setQuestionText] = useState('');
+  const [options, setOptions] = useState([{ text: '', isCorrect: false }]);
+  const [questions, setQuestions] = useState<any[]>([]);
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -29,6 +33,15 @@ export default function ModeratorDashboardClient() {
       } catch {}
     }
   }, []);
+
+  // Fetch questions for selected quiz
+  useEffect(() => {
+    if (selectedQuizId) {
+      fetch(`${BACKEND}/questions/quiz/${selectedQuizId}`)
+        .then(res => res.json())
+        .then(setQuestions);
+    }
+  }, [selectedQuizId]);
 
   // Create quiz
   const handleCreateQuiz = (e: React.FormEvent) => {
@@ -74,6 +87,46 @@ export default function ModeratorDashboardClient() {
     fetch(`${BACKEND}/quizzes/${quizId}/leaderboard`)
       .then(res => res.json())
       .then(data => setLeaderboard(data));
+  };
+
+  // Add option
+  const addOption = () => setOptions([...options, { text: '', isCorrect: false }]);
+  // Remove option
+  const removeOption = (idx: number) => setOptions(options.filter((_, i) => i !== idx));
+  // Update option text
+  const updateOptionText = (idx: number, text: string) => {
+    setOptions(options.map((opt, i) => i === idx ? { ...opt, text } : opt));
+  };
+  // Set correct answer
+  const setCorrect = (idx: number) => {
+    setOptions(options.map((opt, i) => ({ ...opt, isCorrect: i === idx })));
+  };
+
+  // Create question and answers
+  const handleCreateQuestion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedQuizId || !questionText || options.length < 2) return;
+    // 1. Create question
+    const questionRes = await fetch(`${BACKEND}/questions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: questionText, quizId: selectedQuizId }),
+    });
+    const question = await questionRes.json();
+    // 2. Create answers
+    await Promise.all(options.map(opt =>
+      fetch(`${BACKEND}/answers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: opt.text, questionId: question.id, isCorrect: opt.isCorrect }),
+      })
+    ));
+    setQuestionText('');
+    setOptions([{ text: '', isCorrect: false }]);
+    // Refresh questions
+    fetch(`${BACKEND}/questions/quiz/${selectedQuizId}`)
+      .then(res => res.json())
+      .then(setQuestions);
   };
 
   if (loading) return <div>Loading...</div>;
@@ -177,6 +230,81 @@ export default function ModeratorDashboardClient() {
               ))}
             </tbody>
           </table>
+        </section>
+      )}
+
+      {/* Select Quiz to Add Question */}
+      <section>
+        <h2 className="text-2xl font-bold mb-4">Add Question to Quiz</h2>
+        <select
+          value={selectedQuizId || ''}
+          onChange={e => setSelectedQuizId(e.target.value)}
+          className="border rounded px-2 py-1 mb-2"
+        >
+          <option value="">Select Quiz</option>
+          {quizzes.map(q => (
+            <option key={q.id} value={q.id}>{q.title}</option>
+          ))}
+        </select>
+        {selectedQuizId && (
+          <form onSubmit={handleCreateQuestion} className="space-y-2">
+            <input
+              type="text"
+              placeholder="Question text"
+              value={questionText}
+              onChange={e => setQuestionText(e.target.value)}
+              required
+              className="border rounded px-2 py-1 w-full"
+            />
+            <div>
+              {options.map((opt, idx) => (
+                <div key={idx} className="flex items-center mb-1">
+                  <input
+                    type="text"
+                    placeholder={`Option ${idx + 1}`}
+                    value={opt.text}
+                    onChange={e => updateOptionText(idx, e.target.value)}
+                    required
+                    className="border rounded px-2 py-1 mr-2"
+                  />
+                  <input
+                    type="radio"
+                    name="correct"
+                    checked={opt.isCorrect}
+                    onChange={() => setCorrect(idx)}
+                    className="mr-1"
+                  />
+                  <span className="mr-2">Correct</span>
+                  {options.length > 2 && (
+                    <button type="button" onClick={() => removeOption(idx)} className="text-red-600">Remove</button>
+                  )}
+                </div>
+              ))}
+              <button type="button" onClick={addOption} className="text-blue-600 mt-1">Add Option</button>
+            </div>
+            <button type="submit" className="bg-primary text-white px-4 py-1 rounded">Add Question</button>
+          </form>
+        )}
+      </section>
+
+      {/* List Questions for Selected Quiz */}
+      {selectedQuizId && (
+        <section>
+          <h2 className="text-xl font-bold mb-2">Questions for Selected Quiz</h2>
+          <ul>
+            {questions.map(q => (
+              <li key={q.id}>
+                <strong>{q.text}</strong>
+                <ul>
+                  {q.answers?.map((a: any, idx: number) => (
+                    <li key={a.id}>
+                      {a.text} {a.isCorrect && <span className="text-green-600 font-bold">(Correct)</span>}
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
     </div>
