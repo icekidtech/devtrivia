@@ -39,4 +39,8 @@ export class AnswerService {
       where: { questionId },
     });
   }
+
+  async getAllAnswers() {
+    return this.prisma.answer.findMany();
+  }
 }
