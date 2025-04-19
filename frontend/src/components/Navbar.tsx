@@ -4,30 +4,36 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 export default function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState('');
+  const [user, setUser] = useState<{ name: string; role: string } | null>(null);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (user?.name) {
-      setIsLoggedIn(true);
-      setUserName(user.name);
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      try {
+        setUser(JSON.parse(stored));
+      } catch {
+        setUser(null);
+      }
     }
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
-    setIsLoggedIn(false);
-    setUserName('');
+    setUser(null);
     window.location.href = '/login';
   };
 
   return (
     <header className="bg-primary text-white py-4">
       <div className="container mx-auto flex justify-between items-center">
-        <h1 className="text-2xl font-bold">DevTrivia</h1>
+        <div>
+          <h1 className="text-2xl font-bold">DevTrivia</h1>
+          {user && (
+            <span className="ml-4 font-semibold">Welcome, {user.name}!</span>
+          )}
+        </div>
         <nav className="space-x-4">
-          {!isLoggedIn ? (
+          {!user ? (
             <>
               <Link href="/" className="hover:underline">Home</Link>
               <Link href="/about" className="hover:underline">About Us</Link>
@@ -36,8 +42,7 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <span className="font-semibold">Welcome, {userName}!</span>
-              <Link href="/dashboard" className="hover:underline">Dashboard</Link>
+              <Link href={`/${user.role.toLowerCase()}/dashboard`} className="hover:underline">Dashboard</Link>
               <Link href="/profile" className="hover:underline">Profile</Link>
               <button onClick={handleLogout} className="hover:underline">Logout</button>
             </>

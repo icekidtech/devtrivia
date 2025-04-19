@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function AdminDashboardClient() {
+  const [userName, setUserName] = useState('');
   const [users, setUsers] = useState([
     { id: 1, name: 'John Doe', email: 'john@example.com', role: 'USER' },
     { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'MODERATOR' },
@@ -12,6 +13,16 @@ export default function AdminDashboardClient() {
     { id: 1, title: 'JavaScript Basics', description: 'Test your JS knowledge' },
     { id: 2, title: 'React Advanced', description: 'Deep dive into React' },
   ]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      try {
+        const user = JSON.parse(stored);
+        setUserName(user.name);
+      } catch {}
+    }
+  }, []);
 
   const handleDeleteUser = (id: number) => {
     setUsers(users.filter((user) => user.id !== id));
@@ -23,7 +34,10 @@ export default function AdminDashboardClient() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-bold text-center">Administrator Dashboard</h1>
+      <div className="flex justify-between items-center">
+        <span className="font-bold text-lg">Welcome, {userName}</span>
+        <h1 className="text-3xl font-bold text-center flex-1">Administrator Dashboard</h1>
+      </div>
 
       {/* Manage Users */}
       <section>
