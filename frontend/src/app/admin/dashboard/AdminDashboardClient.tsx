@@ -58,6 +58,17 @@ export default function AdminDashboardClient() {
       });
   };
 
+  // User delete
+  const handleDeleteUser = (id: string) => {
+    fetch(`${BACKEND}/admin/users/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(res => {
+        if (res.ok) setUsers(users.filter(u => u.id !== id));
+      });
+  };
+
   // Quiz update
   const handleQuizUpdate = (id: string, title: string, description: string) => {
     fetch(`${BACKEND}/quizzes/${id}`, {
@@ -68,6 +79,14 @@ export default function AdminDashboardClient() {
       .then(res => res.json())
       .then(updatedQuiz => {
         setQuizzes(quizzes.map(q => (q.id === id ? updatedQuiz : q)));
+      });
+  };
+
+  // Quiz delete
+  const handleDeleteQuiz = (id: string) => {
+    fetch(`${BACKEND}/quizzes/${id}`, { method: 'DELETE' })
+      .then(res => {
+        if (res.ok) setQuizzes(quizzes.filter(q => q.id !== id));
       });
   };
 
@@ -84,6 +103,14 @@ export default function AdminDashboardClient() {
       });
   };
 
+  // Question delete
+  const handleDeleteQuestion = (id: string) => {
+    fetch(`${BACKEND}/questions/${id}`, { method: 'DELETE' })
+      .then(res => {
+        if (res.ok) setQuestions(questions.filter(q => q.id !== id));
+      });
+  };
+
   // Answer update
   const handleAnswerUpdate = (id: string, text: string) => {
     fetch(`${BACKEND}/answers/${id}`, {
@@ -94,6 +121,14 @@ export default function AdminDashboardClient() {
       .then(res => res.json())
       .then(updatedAnswer => {
         setAnswers(answers.map(a => (a.id === id ? updatedAnswer : a)));
+      });
+  };
+
+  // Answer delete
+  const handleDeleteAnswer = (id: string) => {
+    fetch(`${BACKEND}/answers/${id}`, { method: 'DELETE' })
+      .then(res => {
+        if (res.ok) setAnswers(answers.filter(a => a.id !== id));
       });
   };
 
@@ -134,6 +169,12 @@ export default function AdminDashboardClient() {
                     <option value="MODERATOR">MODERATOR</option>
                     <option value="ADMIN">ADMIN</option>
                   </select>
+                  <button
+                    onClick={() => handleDeleteUser(user.id)}
+                    className="ml-2 text-red-600 hover:underline"
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}
@@ -171,7 +212,14 @@ export default function AdminDashboardClient() {
                   />
                 </td>
                 <td className="border px-2 py-1">{quiz.ownerId}</td>
-                <td className="border px-2 py-1">Edit above</td>
+                <td className="border px-2 py-1">
+                  <button
+                    onClick={() => handleDeleteQuiz(quiz.id)}
+                    className="ml-2 text-red-600 hover:underline"
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -200,7 +248,14 @@ export default function AdminDashboardClient() {
                   />
                 </td>
                 <td className="border px-2 py-1">{q.quizId}</td>
-                <td className="border px-2 py-1">Edit above</td>
+                <td className="border px-2 py-1">
+                  <button
+                    onClick={() => handleDeleteQuestion(q.id)}
+                    className="ml-2 text-red-600 hover:underline"
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -229,7 +284,14 @@ export default function AdminDashboardClient() {
                   />
                 </td>
                 <td className="border px-2 py-1">{a.questionId}</td>
-                <td className="border px-2 py-1">Edit above</td>
+                <td className="border px-2 py-1">
+                  <button
+                    onClick={() => handleDeleteAnswer(a.id)}
+                    className="ml-2 text-red-600 hover:underline"
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
