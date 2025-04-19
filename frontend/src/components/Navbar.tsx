@@ -15,6 +15,13 @@ export default function Navbar() {
         setUser(null);
       }
     }
+    // Listen for storage changes (e.g., login/logout in another tab)
+    const onStorage = () => {
+      const stored = localStorage.getItem('user');
+      setUser(stored ? JSON.parse(stored) : null);
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
   const handleLogout = () => {
