@@ -45,6 +45,16 @@ model Answer {
   question   Question @relation(fields: [questionId], references: [id])
 }
 
+model Result {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  quiz      Quiz     @relation(fields: [quizId], references: [id])
+  quizId    String
+  score     Int
+  createdAt DateTime @default(now())
+}
+
 enum Role {
   ADMIN
   MODERATOR

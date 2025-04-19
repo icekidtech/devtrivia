@@ -42,4 +42,22 @@ export class QuizService {
       data,
     });
   }
+
+  async getQuizLeaderboard(quizId: string) {
+    // Example: aggregate scores for each user for this quiz
+    return this.prisma.result.findMany({
+      where: { quizId },
+      select: {
+        user: { select: { name: true } },
+        score: true,
+      },
+      orderBy: { score: 'desc' },
+      take: 10,
+    }).then(results =>
+      results.map(r => ({
+        userName: r.user.name,
+        score: r.score,
+      }))
+    );
+  }
 }
