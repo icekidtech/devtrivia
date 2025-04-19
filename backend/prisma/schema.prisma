@@ -15,16 +15,18 @@ model User {
   role      Role     @default(USER) // Add role field
   createdAt DateTime @default(now())
   quizzes   Quiz[]
+  results   Result[]
 }
 
 model Quiz {
-  id          String      @id @default(cuid())
+  id          String     @id @default(cuid())
   title       String
   description String?
-  createdAt   DateTime    @default(now())
+  createdAt   DateTime   @default(now())
   questions   Question[]
   ownerId     String
-  owner       User        @relation(fields: [ownerId], references: [id])
+  owner       User       @relation(fields: [ownerId], references: [id])
+  results     Result[]
 }
 
 model Question {
