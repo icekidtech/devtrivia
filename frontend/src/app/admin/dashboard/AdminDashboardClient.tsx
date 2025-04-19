@@ -33,10 +33,11 @@ export default function AdminDashboardClient() {
       fetch(`${BACKEND}/questions`).then(r => r.json()),
       fetch(`${BACKEND}/answers`).then(r => r.json()),
     ]).then(([users, quizzes, questions, answers]) => {
-      setUsers(users);
-      setQuizzes(quizzes);
-      setQuestions(questions);
-      setAnswers(answers);
+      console.log('Fetched users:', users); // <-- Add this line
+      setUsers(Array.isArray(users) ? users : []);
+      setQuizzes(Array.isArray(quizzes) ? quizzes : []);
+      setQuestions(Array.isArray(questions) ? questions : []);
+      setAnswers(Array.isArray(answers) ? answers : []);
       setLoading(false);
     });
   }, [token]);
