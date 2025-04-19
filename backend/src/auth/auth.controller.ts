@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Patch, ConflictException, UnauthorizedException, UseGuards, Get } from '@nestjs/common';
+import { Body, Controller, Post, Patch, ConflictException, UnauthorizedException, UseGuards, Get, Param } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -70,11 +70,30 @@ export class AuthController {
 @Controller('admin')
 @UseGuards(RoleGuard)
 export class AdminController {
+  constructor(private readonly prisma: PrismaService) {}
+
   @Get('dashboard')
   @Roles('ADMIN')
   getDashboard() {
     return 'Admin Dashboard';
   }
+
+  @Get('users')
+  @Roles('ADMIN')
+  async getAllUsers() {
+    return this.prisma.user.findMany();
+  }
+
+  @Patch('users/:id')
+  @Roles('ADMIN')
+  async updateUser(@Param('id') id: string, @Body() data: any) {
+    return this.prisma.user.update({
+      where: { id },
+      data,
+    });
+  }
+
+  // Repeat similar for quizzes, questions, answers
 }
 
 @Controller('user')
