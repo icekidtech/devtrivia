@@ -24,6 +24,11 @@ export class QuizController {
     }
   }
 
+  @Get(':id/leaderboard')
+  async getQuizLeaderboard(@Param('id') id: string) {
+    return this.quizService.getQuizLeaderboard(id);
+  }
+
   @Delete(':id')
   async deleteQuiz(@Param('id') id: string) {
     return this.quizService.deleteQuiz(id);
