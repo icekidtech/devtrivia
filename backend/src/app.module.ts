@@ -12,6 +12,7 @@ import { QuestionService } from './questions/question.service';
 import { AnswerController } from './answers/answer.controller';
 import { AnswerService } from './answers/answer.service';
 import { AuthController } from './auth/auth.controller';
+import { AdminController } from './admin/admin.controller';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { AuthController } from './auth/auth.controller';
     QuestionController,
     AnswerController,
     AuthController,
+    AdminController,
   ],
   providers: [
     AppService,
