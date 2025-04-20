@@ -6,13 +6,8 @@ export class QuizController {
   constructor(private readonly quizService: QuizService) {}
 
   @Post()
-  async createQuiz(@Body() body: { title: string; description?: string; ownerId: string }) {
-    try {
-      return await this.quizService.createQuiz(body);
-    } catch (error) {
-      // Convert to HTTP exception with proper status code
-      throw new BadRequestException(error.message);
-    }
+  async createQuiz(@Body() body: { title: string; description?: string; ownerName: string }) {
+    return this.quizService.createQuiz(body);
   }
 
   @Get()

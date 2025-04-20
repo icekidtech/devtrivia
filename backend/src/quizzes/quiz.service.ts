@@ -5,20 +5,27 @@ import { PrismaService } from '../prisma/prisma.service';
 export class QuizService {
   constructor(private prisma: PrismaService) {}
 
-  async createQuiz(data: { title: string; description?: string; ownerId: string }) {
-    if (!data.ownerId) {
-      throw new Error('ownerId is required');
+  async createQuiz(data: { title: string; description?: string; ownerName: string }) {
+    if (!data.ownerName) {
+      throw new Error('ownerName is required');
     }
     
-    const userExists = await this.prisma.user.findUnique({
-      where: { id: data.ownerId },
+    const user = await this.prisma.user.findUnique({
+      where: { name: data.ownerName },
     });
 
-    if (!userExists) {
-      throw new Error('Owner does not exist');
+    if (!user) {
+      throw new Error('User does not exist');
     }
 
-    return this.prisma.quiz.create({ data });
+    // Create quiz with the found user's ID
+    return this.prisma.quiz.create({ 
+      data: {
+        title: data.title,
+        description: data.description,
+        ownerId: user.id
+      } 
+    });
   }
 
   async getAllQuizzes() {

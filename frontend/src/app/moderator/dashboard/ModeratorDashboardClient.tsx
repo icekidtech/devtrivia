@@ -28,7 +28,8 @@ export default function ModeratorDashboardClient() {
         fetch(`${BACKEND}/quizzes`)
           .then(res => res.json())
           .then(data => {
-            setQuizzes(data.filter((q: any) => q.ownerId === u.id));
+            // Filter by owner name instead of ID
+            setQuizzes(data.filter((q: any) => q.owner?.name === u.name));
             setLoading(false);
           })
           .catch(err => {
