@@ -51,9 +51,25 @@ export default function ModeratorDashboardClient() {
   // Fetch questions for selected quiz
   useEffect(() => {
     if (selectedQuizId) {
+      console.log(`Fetching questions for quiz: ${selectedQuizId}`);
       fetch(`${BACKEND}/questions/quiz/${selectedQuizId}`)
-        .then(res => res.json())
-        .then(setQuestions);
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`Failed to fetch questions: ${res.status} ${res.statusText}`);
+          }
+          return res.json();
+        })
+        .then(data => {
+          console.log('Questions received:', data);
+          // Ensure we always set an array
+          setQuestions(Array.isArray(data) ? data : []);
+        })
+        .catch(err => {
+          console.error('Error fetching questions:', err);
+          setError(`Failed to fetch questions: ${err.message}`);
+          // Initialize with empty array on error
+          setQuestions([]);
+        });
     }
   }, [selectedQuizId]);
 
@@ -154,28 +170,70 @@ export default function ModeratorDashboardClient() {
   // Create question and answers
   const handleCreateQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedQuizId || !questionText || options.length < 2) return;
-    // 1. Create question
-    const questionRes = await fetch(`${BACKEND}/questions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: questionText, quizId: selectedQuizId }),
-    });
-    const question = await questionRes.json();
-    // 2. Create answers
-    await Promise.all(options.map(opt =>
-      fetch(`${BACKEND}/answers`, {
+    setError(null);
+    
+    if (!selectedQuizId || !questionText || options.length < 2) {
+      const errorMessage = !selectedQuizId 
+        ? "Please select a quiz"
+        : !questionText 
+          ? "Question text is required" 
+          : "At least two answer options are required";
+      
+      setError(errorMessage);
+      console.error(errorMessage);
+      return;
+    }
+    
+    try {
+      console.log('Creating question:', { text: questionText, quizId: selectedQuizId });
+      // 1. Create question
+      const questionRes = await fetch(`${BACKEND}/questions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: opt.text, questionId: question.id, isCorrect: opt.isCorrect }),
-      })
-    ));
-    setQuestionText('');
-    setOptions([{ text: '', isCorrect: false }]);
-    // Refresh questions
-    fetch(`${BACKEND}/questions/quiz/${selectedQuizId}`)
-      .then(res => res.json())
-      .then(setQuestions);
+        body: JSON.stringify({ text: questionText, quizId: selectedQuizId }),
+      });
+      
+      if (!questionRes.ok) {
+        const errorText = await questionRes.text();
+        throw new Error(`Failed to create question: ${errorText}`);
+      }
+      
+      const question = await questionRes.json();
+      console.log('Question created:', question);
+      
+      // 2. Create answers
+      console.log('Creating answers:', options);
+      await Promise.all(options.map(opt =>
+        fetch(`${BACKEND}/answers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            text: opt.text, 
+            questionId: question.id, 
+            isCorrect: opt.isCorrect 
+          }),
+        }).then(res => {
+          if (!res.ok) throw new Error(`Failed to create answer: ${res.statusText}`);
+          return res.json();
+        })
+      ));
+      
+      setQuestionText('');
+      setOptions([{ text: '', isCorrect: false }]);
+      
+      // Refresh questions
+      const questionsRes = await fetch(`${BACKEND}/questions/quiz/${selectedQuizId}`);
+      if (!questionsRes.ok) {
+        throw new Error(`Failed to refresh questions: ${questionsRes.statusText}`);
+      }
+      const refreshedQuestions = await questionsRes.json();
+      setQuestions(Array.isArray(refreshedQuestions) ? refreshedQuestions : []);
+      console.log('Questions refreshed:', refreshedQuestions);
+      
+    } catch (err) {
+      console.error('Error in handleCreateQuestion:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred while creating the question');
+    }
   };
 
   return (
