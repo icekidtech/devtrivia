@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, NotFoundException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, NotFoundException, BadRequestException } from '@nestjs/common';
 import { QuizService } from './quiz.service';
 
 @Controller('quizzes')
@@ -7,7 +7,12 @@ export class QuizController {
 
   @Post()
   async createQuiz(@Body() body: { title: string; description?: string; ownerId: string }) {
-    return this.quizService.createQuiz(body);
+    try {
+      return await this.quizService.createQuiz(body);
+    } catch (error) {
+      // Convert to HTTP exception with proper status code
+      throw new BadRequestException(error.message);
+    }
   }
 
   @Get()
