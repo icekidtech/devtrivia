@@ -6,6 +6,10 @@ export class QuizService {
   constructor(private prisma: PrismaService) {}
 
   async createQuiz(data: { title: string; description?: string; ownerId: string }) {
+    if (!data.ownerId) {
+      throw new Error('ownerId is required');
+    }
+    
     const userExists = await this.prisma.user.findUnique({
       where: { id: data.ownerId },
     });

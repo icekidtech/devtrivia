@@ -24,6 +24,7 @@ export default function ModeratorDashboardClient() {
       try {
         const u = JSON.parse(stored);
         setUser(u);
+        console.log('User from localStorage:', u);
         fetch(`${BACKEND}/quizzes`)
           .then(res => res.json())
           .then(data => {
@@ -62,6 +63,12 @@ export default function ModeratorDashboardClient() {
     if (!user) {
       setError('User not loaded.');
       console.error('User not loaded.');
+      return;
+    }
+    // Add this check before attempting to create a quiz
+    if (!user?.id) {
+      setError('Invalid user ID. Please log in again.');
+      console.error('Missing user ID');
       return;
     }
     if (!title.trim()) {
