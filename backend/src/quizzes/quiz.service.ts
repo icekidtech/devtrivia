@@ -44,7 +44,6 @@ export class QuizService {
   }
 
   async getQuizLeaderboard(quizId: string) {
-    // Example: aggregate scores for each user for this quiz
     return this.prisma.result.findMany({
       where: { quizId },
       select: {

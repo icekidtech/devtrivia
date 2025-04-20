@@ -16,6 +16,7 @@ export default function ModeratorDashboardClient() {
   const [questionText, setQuestionText] = useState('');
   const [options, setOptions] = useState([{ text: '', isCorrect: false }]);
   const [questions, setQuestions] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -26,11 +27,22 @@ export default function ModeratorDashboardClient() {
         fetch(`${BACKEND}/quizzes`)
           .then(res => res.json())
           .then(data => {
-            // Only show quizzes owned by this moderator
             setQuizzes(data.filter((q: any) => q.ownerId === u.id));
             setLoading(false);
+          })
+          .catch(err => {
+            console.error('Error fetching quizzes:', err);
+            setError('Failed to fetch quizzes.');
+            setLoading(false);
           });
-      } catch {}
+      } catch (err) {
+        console.error('Error parsing user from localStorage:', err);
+        setError('User data corrupted.');
+        setLoading(false);
+      }
+    } else {
+      setError('User not found. Please log in again.');
+      setLoading(false);
     }
   }, []);
 
@@ -44,20 +56,40 @@ export default function ModeratorDashboardClient() {
   }, [selectedQuizId]);
 
   // Create quiz
-  const handleCreateQuiz = (e: React.FormEvent) => {
+  const handleCreateQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
-    fetch(`${BACKEND}/quizzes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, description, ownerId: user.id }),
-    })
-      .then(res => res.json())
-      .then(newQuiz => {
-        setQuizzes([...quizzes, newQuiz]);
-        setTitle('');
-        setDescription('');
+    setError(null);
+    if (!user) {
+      setError('User not loaded.');
+      console.error('User not loaded.');
+      return;
+    }
+    if (!title.trim()) {
+      setError('Quiz title is required.');
+      return;
+    }
+    try {
+      console.log('Creating quiz with:', { title, description, ownerId: user.id });
+      const res = await fetch(`${BACKEND}/quizzes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description, ownerId: user.id }),
       });
+      if (!res.ok) {
+        const errMsg = await res.text();
+        setError(`Failed to create quiz: ${errMsg}`);
+        console.error('Failed to create quiz:', errMsg);
+        return;
+      }
+      const newQuiz = await res.json();
+      setQuizzes([...quizzes, newQuiz]);
+      setTitle('');
+      setDescription('');
+      console.log('Quiz created:', newQuiz);
+    } catch (err) {
+      setError('An error occurred while creating the quiz.');
+      console.error('Error in handleCreateQuiz:', err);
+    }
   };
 
   // Edit quiz
@@ -129,14 +161,16 @@ export default function ModeratorDashboardClient() {
       .then(setQuestions);
   };
 
-  if (loading) return <div>Loading...</div>;
-
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <span className="font-bold text-lg">Welcome, {user?.name}</span>
         <h1 className="text-3xl font-bold text-center flex-1">Moderator Dashboard</h1>
       </div>
+
+      {error && (
+        <div className="bg-red-100 text-red-700 p-2 rounded mb-4">{error}</div>
+      )}
 
       {/* Create Quiz */}
       <section>
@@ -157,56 +191,27 @@ export default function ModeratorDashboardClient() {
             onChange={e => setDescription(e.target.value)}
             className="border rounded px-2 py-1 flex-1"
           />
-          <button type="submit" className="bg-primary text-white px-4 py-1 rounded">Create</button>
+          <button
+            type="submit"
+            className="bg-primary text-white px-4 py-1 rounded"
+            disabled={loading}
+          >
+            {loading ? 'Loading...' : 'Create'}
+          </button>
         </form>
       </section>
 
       {/* Manage Quizzes */}
       <section>
         <h2 className="text-2xl font-bold mb-4">Manage Quizzes</h2>
-        <table className="w-full border-collapse border border-gray-300 text-sm">
-          <thead>
-            <tr>
-              <th className="border px-2 py-1">Title</th>
-              <th className="border px-2 py-1">Description</th>
-              <th className="border px-2 py-1">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {quizzes.map(quiz => (
-              <tr key={quiz.id}>
-                <td className="border px-2 py-1">
-                  <input
-                    defaultValue={quiz.title}
-                    onBlur={e => handleEditQuiz(quiz.id, e.target.value, quiz.description)}
-                    className="border rounded px-2 py-1"
-                  />
-                </td>
-                <td className="border px-2 py-1">
-                  <input
-                    defaultValue={quiz.description}
-                    onBlur={e => handleEditQuiz(quiz.id, quiz.title, e.target.value)}
-                    className="border rounded px-2 py-1"
-                  />
-                </td>
-                <td className="border px-2 py-1">
-                  <button
-                    onClick={() => handleDeleteQuiz(quiz.id)}
-                    className="text-red-600 hover:underline mr-2"
-                  >
-                    Delete
-                  </button>
-                  <button
-                    onClick={() => handleViewLeaderboard(quiz.id)}
-                    className="text-blue-600 hover:underline"
-                  >
-                    Leaderboard
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ul>
+          {quizzes.map((quiz: any) => (
+            <li key={quiz.id}>
+              <h2>{quiz.title}</h2>
+              <p>{quiz.description}</p>
+            </li>
+          ))}
+        </ul>
       </section>
 
       {/* Leaderboard */}
@@ -297,7 +302,7 @@ export default function ModeratorDashboardClient() {
                 <strong>{q.text}</strong>
                 <ul>
                   {q.answers?.map((a: any, idx: number) => (
-                    <li key={a.id}>
+                    <li key={a.id || `${q.id}-answer-${idx}`}>
                       {a.text} {a.isCorrect && <span className="text-green-600 font-bold">(Correct)</span>}
                     </li>
                   ))}
