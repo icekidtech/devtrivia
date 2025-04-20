@@ -65,29 +65,38 @@ export default function ModeratorDashboardClient() {
       console.error('User not loaded.');
       return;
     }
-    // Add this check before attempting to create a quiz
-    if (!user?.id) {
-      setError('Invalid user ID. Please log in again.');
-      console.error('Missing user ID');
+    
+    // Use name instead of id - this is the key change
+    if (!user.name) {
+      setError('Username not found. Please log in again.');
+      console.error('Missing username');
       return;
     }
+    
     if (!title.trim()) {
       setError('Quiz title is required.');
       return;
     }
+    
     try {
-      console.log('Creating quiz with:', { title, description, ownerId: user.id });
+      console.log('Creating quiz with:', { title, description, ownerName: user.name });
       const res = await fetch(`${BACKEND}/quizzes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, ownerId: user.id }),
+        body: JSON.stringify({ 
+          title, 
+          description, 
+          ownerName: user.name  // Send name instead of id
+        }),
       });
+      
       if (!res.ok) {
         const errMsg = await res.text();
         setError(`Failed to create quiz: ${errMsg}`);
         console.error('Failed to create quiz:', errMsg);
         return;
       }
+      
       const newQuiz = await res.json();
       setQuizzes([...quizzes, newQuiz]);
       setTitle('');
