@@ -9,16 +9,17 @@ import {
   UploadedFile, 
   Request, 
   UseGuards, 
-  ConflictException 
+  ConflictException,
+  NotFoundException,
+  UnauthorizedException
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
-
-// If the guard is in the auth module at the same level as user module
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Request as ExpressRequest } from 'express';
 
 @Controller('users')
 export class UserController {
@@ -61,7 +62,11 @@ export class UserController {
   // Get user profile
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  async getProfile(@Request() req) {
+  async getProfile(@Request() req: ExpressRequest) {
+    if (!req.user || !req.user.id) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { id: req.user.id },
       select: {
@@ -73,6 +78,11 @@ export class UserController {
         createdAt: true,
       },
     });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
     return user;
   }
 
@@ -80,9 +90,13 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Put('profile')
   async updateProfile(
-    @Request() req,
+    @Request() req: ExpressRequest,
     @Body() body: { name?: string; email?: string; currentPassword?: string; newPassword?: string; },
   ) {
+    if (!req.user || !req.user.id) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
     const userData: any = {};
     
     if (body.name) userData.name = body.name;
@@ -95,9 +109,14 @@ export class UserController {
         where: { id: req.user.id },
       });
       
+      // Add a null check before accessing user properties
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      
       const isPasswordValid = await bcrypt.compare(body.currentPassword, user.password);
       if (!isPasswordValid) {
-        throw new Error('Current password is incorrect');
+        throw new UnauthorizedException('Current password is incorrect');
       }
       
       // Hash new password
@@ -127,10 +146,15 @@ export class UserController {
     FileInterceptor('image', {
       storage: diskStorage({
         destination: './uploads/profiles',
-        filename: (req, file, cb) => {
+        filename: (req: ExpressRequest, file, cb) => {
+          // Check if req.user exists and has id
+          if (!req.user || !req.user.id) {
+            return cb(new Error('User not authenticated'), '');
+          }
+          
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
-          cb(null, `${req.user.id}${ext}`);
+          cb(null, `${req.user.id}-${uniqueSuffix}${ext}`);
         },
       }),
       fileFilter: (req, file, cb) => {
@@ -141,7 +165,15 @@ export class UserController {
       },
     }),
   )
-  async uploadProfileImage(@Request() req, @UploadedFile() file) {
+  async uploadProfileImage(@Request() req: ExpressRequest, @UploadedFile() file: Express.Multer.File) {
+    if (!req.user || !req.user.id) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+    
+    if (!file) {
+      throw new ConflictException('No file uploaded');
+    }
+    
     // Update user with image path
     const updatedUser = await this.prisma.user.update({
       where: { id: req.user.id },
