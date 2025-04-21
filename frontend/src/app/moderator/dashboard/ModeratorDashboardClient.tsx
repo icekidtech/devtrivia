@@ -25,16 +25,21 @@ export default function ModeratorDashboardClient() {
         const u = JSON.parse(stored);
         setUser(u);
         console.log('User from localStorage:', u);
+        
         fetch(`${BACKEND}/quizzes`)
           .then(res => res.json())
           .then(data => {
-            // Filter by owner name instead of ID
-            setQuizzes(data.filter((q: any) => q.owner?.name === u.name));
-            setLoading(false);
-          })
-          .catch(err => {
-            console.error('Error fetching quizzes:', err);
-            setError('Failed to fetch quizzes.');
+            console.log('Quizzes from API:', data);
+            // Check if owner data exists on each quiz
+            const userQuizzes = data.filter((q: any) => {
+              if (!q.owner) {
+                console.log('Quiz missing owner data:', q);
+                return false;
+              }
+              return q.owner.name === u.name;
+            });
+            console.log('Filtered quizzes:', userQuizzes);
+            setQuizzes(userQuizzes);
             setLoading(false);
           });
       } catch (err) {

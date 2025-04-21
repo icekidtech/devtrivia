@@ -30,7 +30,10 @@ export class QuizService {
 
   async getAllQuizzes() {
     return this.prisma.quiz.findMany({
-      include: { questions: true },
+      include: { 
+        questions: true,
+        owner: true, // Missing owner include here
+      },
     });
   }
 
