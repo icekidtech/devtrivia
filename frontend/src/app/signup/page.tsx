@@ -15,7 +15,6 @@ export default function SignupPage() {
     e.preventDefault();
     try {
       const response = await signup(formData);
-      // Save user info and token
       localStorage.setItem('user', JSON.stringify({
         name: response.user.name,
         role: response.user.role,
