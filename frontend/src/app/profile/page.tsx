@@ -84,23 +84,39 @@ export default function ProfilePage() {
       // First upload image if one is selected
       let updatedProfileImage = user.profileImage;
       if (profileImage) {
-        const formData = new FormData();
-        formData.append('image', profileImage);
-        
-        const imageRes = await fetch(`${BACKEND}/users/profile/image`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${user.token}`
-          },
-          body: formData
-        });
-        
-        if (!imageRes.ok) {
-          throw new Error('Failed to upload image');
+        try {
+          const formData = new FormData();
+          formData.append('image', profileImage);  // Ensure field name matches backend
+          
+          console.log('Uploading image:', profileImage.name, profileImage.type, profileImage.size);
+          
+          const imageRes = await fetch(`${BACKEND}/users/profile/image`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${user.token}`
+            },
+            // Don't set Content-Type with FormData - it will be set automatically with boundary
+            body: formData
+          });
+          
+          if (!imageRes.ok) {
+            let errorText = 'Unknown error';
+            try {
+              const errorData = await imageRes.json();
+              errorText = errorData.message || `HTTP ${imageRes.status}: ${imageRes.statusText}`;
+            } catch {
+              errorText = `HTTP ${imageRes.status}: ${imageRes.statusText}`;
+            }
+            throw new Error(`Image upload failed: ${errorText}`);
+          }
+          
+          const imageData = await imageRes.json();
+          console.log('Image upload successful:', imageData);
+          updatedProfileImage = imageData.profileImage;
+        } catch (error) {
+          console.error('Image upload error details:', error);
+          throw error; // Re-throw to be caught by the outer catch
         }
-        
-        const imageData = await imageRes.json();
-        updatedProfileImage = imageData.profileImage;
       }
       
       // Update user profile

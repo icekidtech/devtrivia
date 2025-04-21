@@ -11,7 +11,10 @@ import {
   UseGuards, 
   ConflictException,
   NotFoundException,
-  UnauthorizedException
+  UnauthorizedException,
+  BadRequestException,
+  InternalServerErrorException,
+  HttpException
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -20,6 +23,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request as ExpressRequest } from 'express';
+import { existsSync, mkdirSync } from 'fs';
 
 @Controller('users')
 export class UserController {
@@ -141,7 +145,7 @@ export class UserController {
   
   // Upload profile image
   @UseGuards(JwtAuthGuard)
-  @Post('profile/image')
+  @Post('profile/image')  // Make sure this matches your frontend
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
@@ -166,28 +170,50 @@ export class UserController {
     }),
   )
   async uploadProfileImage(@Request() req: ExpressRequest, @UploadedFile() file: Express.Multer.File) {
-    if (!req.user || !req.user.id) {
-      throw new UnauthorizedException('User not authenticated');
+    try {
+      if (!req.user || !req.user.id) {
+        throw new UnauthorizedException('User not authenticated');
+      }
+      
+      console.log('Received file upload:', file?.originalname, file?.mimetype, file?.size);
+      
+      if (!file) {
+        throw new BadRequestException('No file uploaded');
+      }
+      
+      // Verify uploads directory exists
+      const uploadDir = './uploads/profiles';
+      try {
+        if (!existsSync(uploadDir)) {
+          mkdirSync(uploadDir, { recursive: true });
+          console.log(`Created upload directory: ${uploadDir}`);
+        }
+      } catch (err) {
+        console.error('Error ensuring upload directory exists:', err);
+        throw new InternalServerErrorException('Error processing upload - directory issue');
+      }
+      
+      // Update user with image path
+      const updatedUser = await this.prisma.user.update({
+        where: { id: req.user.id },
+        data: {
+          profileImage: `/uploads/profiles/${file.filename}`,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profileImage: true,
+        },
+      });
+      
+      return updatedUser;
+    } catch (error) {
+      console.error('Error in uploadProfileImage:', error);
+      if (error instanceof HttpException) {
+        throw error; // Re-throw HTTP exceptions
+      }
+      throw new InternalServerErrorException(`Failed to process image: ${error.message}`);
     }
-    
-    if (!file) {
-      throw new ConflictException('No file uploaded');
-    }
-    
-    // Update user with image path
-    const updatedUser = await this.prisma.user.update({
-      where: { id: req.user.id },
-      data: {
-        profileImage: `/uploads/profiles/${file.filename}`,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        profileImage: true,
-      },
-    });
-    
-    return updatedUser;
   }
 }
