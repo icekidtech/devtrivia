@@ -53,7 +53,15 @@ export class AuthController {
     }
 
     const token = this.jwtService.sign({ id: user.id, role: user.role });
-    return { token };
+    return { 
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    };
   }
 
   @Patch('reset-password')

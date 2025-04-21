@@ -16,9 +16,20 @@ export default function LoginPage() {
     try {
       const response = await login(formData);
       const { token } = response;
-      localStorage.setItem('token', token);
-      const { role } = JSON.parse(atob(token.split('.')[1]));
-      window.location.href = `/${role.toLowerCase()}/dashboard`;
+      
+      // Decode JWT payload to get user info
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      
+      // Store complete user object like signup does
+      localStorage.setItem('user', JSON.stringify({
+        id: payload.id,
+        name: payload.name || payload.sub, // Depends on what's in your JWT
+        role: payload.role,
+        email: formData.email, // Include email from form
+        token: token
+      }));
+      
+      window.location.href = `/${payload.role.toLowerCase()}/dashboard`;
     } catch (error: any) {
       setMessage(error.message || 'Login failed.');
     }
