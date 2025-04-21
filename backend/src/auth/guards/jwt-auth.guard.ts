@@ -2,40 +2,51 @@ import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/com
 import { AuthGuard } from '@nestjs/passport';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
-  constructor(private jwtService?: JwtService) {
+  constructor(private readonly jwtService?: JwtService) {
     super();
   }
 
-  canActivate(context: ExecutionContext) {
-    // For direct token verification approach (without passport)
+  canActivate(
+    context: ExecutionContext,
+  ): boolean | Promise<boolean> | Observable<boolean> {
+    // For direct token verification without passport strategy
     if (this.jwtService) {
       const request = context.switchToHttp().getRequest<Request>();
       const token = this.extractTokenFromHeader(request);
       
       if (!token) {
-        throw new UnauthorizedException('No token provided');
+        throw new UnauthorizedException('Authentication required');
       }
       
       try {
         const payload = this.jwtService.verify(token);
-        // Explicitly add user to the request object
+        // Add user info to request
         request.user = payload;
         return true;
-      } catch {
-        throw new UnauthorizedException('Invalid token');
+      } catch (error) {
+        console.error('JWT verification failed:', error.message);
+        if (error.name === 'TokenExpiredError') {
+          throw new UnauthorizedException('Session expired, please login again');
+        }
+        throw new UnauthorizedException('Invalid authentication token');
       }
     }
     
-    // Fall back to standard passport behavior
+    // Fall back to passport strategy
     return super.canActivate(context);
   }
 
-  handleRequest(err, user, info) {
-    // You can throw an exception based on either "info" or "err" arguments
+  handleRequest(err: any, user: any, info: any) {
+    // Enhanced error handling
     if (err || !user) {
+      if (info?.name === 'TokenExpiredError') {
+        throw new UnauthorizedException('Session expired, please login again');
+      }
+      
       throw err || new UnauthorizedException('Authentication failed');
     }
     return user;

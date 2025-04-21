@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Patch, NotFoundException, BadRequestException } from '@nestjs/common';
 import { QuizService } from './quiz.service';
 
 @Controller('quizzes')
@@ -32,5 +32,24 @@ export class QuizController {
   @Delete(':id')
   async deleteQuiz(@Param('id') id: string) {
     return this.quizService.deleteQuiz(id);
+  }
+
+  @Patch(':id/publish')
+  async publishQuiz(@Param('id') id: string) {
+    return this.quizService.publishQuiz(id);
+  }
+
+  @Patch(':id/unpublish')
+  async unpublishQuiz(@Param('id') id: string) {
+    return this.quizService.unpublishQuiz(id);
+  }
+
+  @Get('join/:code')
+  async getQuizByJoinCode(@Param('code') code: string) {
+    const quiz = await this.quizService.getQuizByJoinCode(code);
+    if (!quiz || !quiz.published) {
+      throw new NotFoundException('Quiz not found or not published');
+    }
+    return quiz;
   }
 }

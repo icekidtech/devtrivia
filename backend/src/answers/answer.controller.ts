@@ -21,8 +21,8 @@ export class AnswerController {
     return this.answerService.deleteAnswer(id);
   }
 
-  @Get('question/:questionId')
-  async getAnswersByQuestion(@Param('questionId') questionId: string) {
+  @Get('question/:id')
+  async getAnswersByQuestion(@Param('id') questionId: string) {
     return this.answerService.getAnswersByQuestion(questionId);
   }
 }
