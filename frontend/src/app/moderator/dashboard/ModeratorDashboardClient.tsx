@@ -151,6 +151,24 @@ export default function ModeratorDashboardClient() {
       });
   };
 
+  // Publish quiz
+  const handlePublishQuiz = (id: string) => {
+    fetch(`${BACKEND}/quizzes/${id}/publish`, { method: 'POST' })
+      .then(res => res.json())
+      .then(updatedQuiz => {
+        setQuizzes(quizzes.map(q => (q.id === id ? updatedQuiz : q)));
+      });
+  };
+
+  // Unpublish quiz
+  const handleUnpublishQuiz = (id: string) => {
+    fetch(`${BACKEND}/quizzes/${id}/unpublish`, { method: 'POST' })
+      .then(res => res.json())
+      .then(updatedQuiz => {
+        setQuizzes(quizzes.map(q => (q.id === id ? updatedQuiz : q)));
+      });
+  };
+
   // View leaderboard for a quiz
   const handleViewLeaderboard = (quizId: string) => {
     setSelectedQuiz(quizId);
@@ -284,14 +302,68 @@ export default function ModeratorDashboardClient() {
       {/* Manage Quizzes */}
       <section>
         <h2 className="text-2xl font-bold mb-4">Manage Quizzes</h2>
-        <ul>
+        <div className="space-y-4">
           {quizzes.map((quiz: any) => (
-            <li key={quiz.id}>
-              <h2>{quiz.title}</h2>
-              <p>{quiz.description}</p>
-            </li>
+            <div key={quiz.id} className="border rounded-lg p-4 bg-white shadow">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-xl font-bold">{quiz.title}</h3>
+                  <p className="text-gray-600">{quiz.description}</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Questions: {quiz.questions?.length || 0}
+                    {quiz.published && <span className="ml-4 text-green-600 font-semibold">Published</span>}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  {quiz.published ? (
+                    <div className="text-center">
+                      <div className="bg-green-100 text-green-800 px-3 py-1 rounded mb-2">
+                        <span className="font-mono font-bold">{quiz.joinCode}</span>
+                      </div>
+                      <button
+                        onClick={() => handleUnpublishQuiz(quiz.id)}
+                        className="text-red-600 hover:underline text-sm"
+                      >
+                        Unpublish Quiz
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handlePublishQuiz(quiz.id)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded"
+                      disabled={quiz.questions?.length < 1}
+                    >
+                      Publish Quiz
+                    </button>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex space-x-2 mt-4">
+                <button
+                  onClick={() => setSelectedQuizId(quiz.id)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded"
+                >
+                  {quiz.published ? "View Questions" : "Edit Questions"}
+                </button>
+                <button
+                  onClick={() => handleViewLeaderboard(quiz.id)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-1 rounded"
+                >
+                  View Leaderboard
+                </button>
+                {!quiz.published && (
+                  <button
+                    onClick={() => handleDeleteQuiz(quiz.id)}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            </div>
           ))}
-        </ul>
+        </div>
       </section>
 
       {/* Leaderboard */}
