@@ -36,7 +36,7 @@ export default function Navbar() {
         <div>
           <h1 className="text-2xl font-bold">DevTrivia</h1>
           {user && (
-            <span className="ml-4 font-semibold">Welcome, {user.name}!</span>
+            <span className="ml-4 font-semibold">Welcome, {user.name}</span>
           )}
         </div>
         <nav className="space-x-4">
