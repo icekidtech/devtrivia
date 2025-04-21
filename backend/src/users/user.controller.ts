@@ -16,6 +16,8 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+
+// If the guard is in the auth module at the same level as user module
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('users')
