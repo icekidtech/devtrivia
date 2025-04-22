@@ -16,9 +16,7 @@ export default function LoginPage() {
     try {
       const response = await login(formData);
       const { token } = response;
-      localStorage.setItem('token', token);
-      const { role } = JSON.parse(atob(token.split('.')[1]));
-      window.location.href = `/${role.toLowerCase()}/dashboard`;
+      localStorage.setItem('token', token);  // ONLY stores the token!
     } catch (error: any) {
       setMessage(error.message || 'Login failed.');
     }
