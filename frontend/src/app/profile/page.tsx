@@ -36,7 +36,11 @@ export default function ProfilePage() {
         });
         
         if (parsedUser.profileImage) {
-          setImagePreview(`${BACKEND}${parsedUser.profileImage}`);
+          // Fix: Check if the URL is already absolute or needs the backend URL
+          const imageUrl = parsedUser.profileImage.startsWith('http') 
+            ? parsedUser.profileImage 
+            : `${BACKEND}${parsedUser.profileImage}`;
+          setImagePreview(imageUrl);
         }
       } catch (err) {
         console.error('Error parsing user from localStorage:', err);
@@ -113,6 +117,9 @@ export default function ProfilePage() {
           const imageData = await imageRes.json();
           console.log('Image upload successful:', imageData);
           updatedProfileImage = imageData.profileImage;
+
+          // Add this line to show the image immediately after upload
+          setImagePreview(`${BACKEND}${imageData.profileImage}`);
         } catch (error) {
           console.error('Image upload error details:', error);
           throw error; // Re-throw to be caught by the outer catch
