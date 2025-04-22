@@ -35,9 +35,6 @@ export default function Navbar() {
       <div className="container mx-auto flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">DevTrivia</h1>
-          {user && (
-            <span className="ml-4 font-semibold">Welcome, {user.name}</span>
-          )}
         </div>
         <nav className="space-x-4">
           {!user ? (
