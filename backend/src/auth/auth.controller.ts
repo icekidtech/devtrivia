@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Patch, ConflictException, UnauthorizedException, UseGuards, Get, Param, Delete } from '@nestjs/common';
+import { Body, Controller, Post, Patch, ConflictException, UnauthorizedException, UseGuards, Get, Param, Delete, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -44,15 +44,29 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() body: { email: string; password: string }) {
+    // Find the user
     const user = await this.prisma.user.findUnique({
       where: { email: body.email },
     });
 
-    if (!user || !(await bcrypt.compare(body.password, user.password))) {
-      throw new UnauthorizedException('Invalid email or password');
+    // Check if user exists
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
 
-    const token = this.jwtService.sign({ id: user.id, role: user.role });
+    // Verify password
+    const passwordValid = await bcrypt.compare(body.password, user.password);
+    if (!passwordValid) {
+      throw new UnauthorizedException('Invalid password');
+    }
+
+    // Generate JWT token
+    const token = this.jwtService.sign({ 
+      id: user.id, 
+      role: user.role 
+    });
+    
+    // Return user info and token
     return { 
       token,
       user: {
