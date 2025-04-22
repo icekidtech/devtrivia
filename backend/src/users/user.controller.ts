@@ -193,11 +193,14 @@ export class UserController {
         throw new InternalServerErrorException('Error processing upload - directory issue');
       }
       
+      // Image path to store in database and return to client
+      const imagePath = `/uploads/profiles/${file.filename}`;
+      
       // Update user with image path
       const updatedUser = await this.prisma.user.update({
         where: { id: req.user.id },
         data: {
-          profileImage: `/uploads/profiles/${file.filename}`,
+          profileImage: imagePath,
         },
         select: {
           id: true,
@@ -211,7 +214,7 @@ export class UserController {
     } catch (error) {
       console.error('Error in uploadProfileImage:', error);
       if (error instanceof HttpException) {
-        throw error; // Re-throw HTTP exceptions
+        throw error; 
       }
       throw new InternalServerErrorException(`Failed to process image: ${error.message}`);
     }
