@@ -70,14 +70,14 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="signup-container">
+    <div className="cyberpunk-signup login-container">
       <div className="wrapper">
         <span className="bg-animate"></span>
         <span className="bg-animate2"></span>
 
         <div>
           <div className="form-box signup">
-            <h2 className="animation" style={{"--i": 0, "--j": 21} as React.CSSProperties}>Sign Up</h2>
+            <h2 className="animation neon-text" style={{"--i": 0, "--j": 21} as React.CSSProperties}>Sign Up</h2>
             <form onSubmit={handleSubmit}>
               {message && (
                 <div 
@@ -147,13 +147,13 @@ export default function SignupPage() {
               </button>
               
               <div className="logreg-link animation" style={{"--i": 6, "--j": 27} as React.CSSProperties}>
-                <p>Already have an account? <Link href="/login" className="login-link">Login</Link></p>
+                <p>Already have an account? <Link href="/login" className="login-link text-cyan-400">Login</Link></p>
               </div>
             </form>
           </div>
 
           <div className="info-text signup">
-            <h2 className="animation" style={{"--i": 0, "--j": 20} as React.CSSProperties}>Join DevTrivia!</h2>
+            <h2 className="animation neon-text" style={{"--i": 0, "--j": 20} as React.CSSProperties}>Join DevTrivia!</h2>
             <p className="animation" style={{"--i": 1, "--j": 21} as React.CSSProperties}>
               Create your account to start creating quizzes, join competitions, and test your knowledge with our tech trivia platform.
             </p>
