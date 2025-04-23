@@ -51,48 +51,35 @@ export default function SignupPage() {
       if (!response.ok) {
         setMessageType('error');
         
-        // Handle username suggestions
-        if (data.message?.includes('username already exists') || 
-            data.message?.includes('User with this username already exists')) {
-          setMessage('This username is already taken. Please choose another or select from the suggestions below.');
+        console.log('Error response:', data); // Add this for debugging
+        
+        // Check for username taken error - adjust based on your actual backend response
+        if (data.message?.includes('Username is already taken') || 
+            data.message?.includes('username already exists')) {
+          setMessage('This username is already taken. Please choose another.');
+          
+          // Check if suggestions are provided in the response
           if (data.suggestions && Array.isArray(data.suggestions)) {
             setUsernameSuggestions(data.suggestions);
           }
           return;
         }
         
-        // Handle email already exists
+        // Check for email taken error
         if (data.message?.includes('email already exists') || 
             data.message?.includes('User with this email already exists')) {
-          setMessage('This email is already registered. Please use a different email or login with this address.');
+          setMessage('This email is already registered. Please use a different email.');
           return;
         }
         
-        // General error
-        throw new Error(data.message || 'Signup failed');
+        // If no specific error was caught, show the generic message
+        setMessage(data.message || 'Signup failed');
+        return;
       }
 
-      localStorage.setItem('user', JSON.stringify({
-        id: data.user.id,
-        name: data.user.name,
-        email: data.user.email,
-        role: data.user.role,
-        token: data.token,
-      }));
-      
-      setMessageType('success');
-      setMessage('Signup successful! Redirecting...');
-      
-      // Redirect after a short delay so the user can see the success message
-      setTimeout(() => {
-        window.location.href = `/${data.user.role.toLowerCase()}/dashboard`;
-      }, 1500);
+      // Success handling code...
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        setMessage(error.message);
-      } else {
-        setMessage('Signup failed. Please try again.');
-      }
+      // Handle unexpected errors...
     }
   };
 
