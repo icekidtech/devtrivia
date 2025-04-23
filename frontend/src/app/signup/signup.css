@@ -1,0 +1,241 @@
+.signup-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  background: linear-gradient(to right, #3F5EFB, #FC466B);
+  font-family: 'Montserrat', sans-serif;
+}
+
+.wrapper {
+  position: relative;
+  width: 850px;
+  height: 600px; /* Taller to accommodate the additional form fields */
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 20px 20px 40px 6px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.wrapper .bg-animate {
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 500px;
+  height: 500px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  filter: blur(5px);
+}
+
+.wrapper .bg-animate2 {
+  position: absolute;
+  bottom: -50px;
+  left: -50px;
+  width: 300px;
+  height: 300px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  filter: blur(5px);
+}
+
+.wrapper > div {
+  display: flex;
+  width: 100%;
+}
+
+.wrapper .form-box {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 40px;
+}
+
+.wrapper .form-box.signup {
+  opacity: 1;
+  transition: .5s ease;
+  transition-delay: calc(.1s * var(--i));
+}
+
+.wrapper .info-text {
+  width: 50%;
+  padding: 0 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.wrapper .info-text.signup {
+  opacity: 1;
+  transition: .5s ease;
+  transition-delay: calc(.1s * var(--i));
+}
+
+.info-text h2 {
+  font-size: 36px;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  margin-bottom: 20px;
+}
+
+.info-text p {
+  font-size: 16px;
+  color: #fff;
+  opacity: 0.8;
+}
+
+.form-box h2 {
+  font-size: 32px;
+  text-align: center;
+  color: #fff;
+  margin-bottom: 30px;
+}
+
+.form-box .input-box, .form-box .select-box {
+  position: relative;
+  width: 100%;
+  height: 50px;
+  margin: 20px 0;
+}
+
+.input-box input, .select-box select {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  border-radius: 40px;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 16px;
+  color: #fff;
+  padding: 0 20px 0 35px;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.select-box select {
+  appearance: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 15px center;
+  background-size: 15px;
+  padding-right: 40px;
+}
+
+.select-box select option {
+  background: rgba(63, 94, 251, 0.9);
+  color: white;
+}
+
+.input-box label, .select-box label {
+  position: absolute;
+  top: 50%;
+  left: 35px;
+  transform: translateY(-50%);
+  color: #fff;
+  pointer-events: none;
+  transition: .5s;
+}
+
+.input-box input:focus ~ label,
+.input-box input:valid ~ label,
+.select-box select:focus ~ label,
+.select-box select:valid ~ label {
+  top: -10px;
+  left: 20px;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 1px 8px;
+  opacity: 0.8;
+}
+
+.form-box .btn {
+  width: 100%;
+  height: 45px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  outline: none;
+  border-radius: 40px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  font-size: 16px;
+  color: #fff;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.form-box .btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.form-box .logreg-link {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.logreg-link p {
+  color: #fff;
+  font-size: 14px;
+  margin: 5px 0;
+}
+
+.logreg-link a {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.logreg-link a:hover {
+  text-decoration: underline;
+}
+
+.animation {
+  opacity: 0;
+  filter: blur(5px);
+  transform: translateY(40px);
+  animation: fade-in 0.5s ease forwards;
+  animation-delay: calc(.1s * var(--i));
+}
+
+@keyframes fade-in {
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+.error-message {
+  background: rgba(255, 0, 0, 0.2);
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 20px;
+  margin-bottom: 15px;
+  width: 100%;
+  text-align: center;
+  animation: shake 0.5s ease;
+}
+
+.success-message {
+  background: rgba(0, 255, 0, 0.2);
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 20px;
+  margin-bottom: 15px;
+  width: 100%;
+  text-align: center;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}

@@ -1,33 +1,68 @@
 'use client';
 
 import { useState } from 'react';
-import { signup } from '@/lib/api';
+import Link from 'next/link';
+import './signup.css';
+
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export default function SignupPage() {
-  const [formData, setFormData] = useState({ email: '', name: '', password: '', role: 'USER' });
+  const [formData, setFormData] = useState({
+    email: '',
+    name: '',
+    password: '',
+    role: 'USER',
+  });
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'error' | 'success'>('error');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const response = await signup(formData);
+      const response = await fetch(`${BACKEND}/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        setMessageType('error');
+        throw new Error(error.message || 'Signup failed');
+      }
+
+      const data = await response.json();
       localStorage.setItem('user', JSON.stringify({
-        name: response.user.name,
-        role: response.user.role,
-        email: response.user.email,
-        token: response.token,
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        role: data.user.role,
+        token: data.token,
       }));
-      // Redirect to dashboard
-      window.location.href = `/${response.user.role.toLowerCase()}/dashboard`;
-    } catch (error: any) {
-      if (error.message.includes('User with this email already exists')) {
-        setMessage('This email is already registered. Please use a different email.');
-      } else if (error.message.includes('User with this username already exists')) {
-        setMessage('This username is already taken. Please choose another.');
+      
+      setMessageType('success');
+      setMessage('Signup successful! Redirecting...');
+      
+      // Redirect after a short delay so the user can see the success message
+      setTimeout(() => {
+        window.location.href = `/${data.user.role.toLowerCase()}/dashboard`;
+      }, 1500);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message.includes('email already exists')) {
+          setMessage('This email is already registered. Please use a different email.');
+        } else if (error.message.includes('username already exists')) {
+          setMessage('This username is already taken. Please choose another.');
+        } else {
+          setMessage(error.message);
+        }
       } else {
         setMessage('Signup failed. Please try again.');
       }
@@ -35,25 +70,95 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background dark:bg-darkBackground">
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8">
-        <h2 className="text-3xl font-bold text-center text-gray-800 dark:text-darkForeground mb-6">
-          Signup
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <input type="email" name="email" placeholder="Email" onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-300" />
-          <input type="text" name="name" placeholder="Username" onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-300" />
-          <input type="password" name="password" placeholder="Password" onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-300" />
-          <select name="role" onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-300">
-            <option value="USER">User</option>
-            <option value="MODERATOR">Moderator</option>
-            <option value="ADMIN">Administrator</option>
-          </select>
-          <button type="submit" className="w-full bg-primary text-white py-2 rounded-md hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 transition duration-300">
-            Signup
-          </button>
-        </form>
-        {message && <p className="mt-4 text-center text-green-600 dark:text-green-400">{message}</p>}
+    <div className="signup-container">
+      <div className="wrapper">
+        <span className="bg-animate"></span>
+        <span className="bg-animate2"></span>
+
+        <div>
+          <div className="form-box signup">
+            <h2 className="animation" style={{"--i": 0, "--j": 21} as React.CSSProperties}>Sign Up</h2>
+            <form onSubmit={handleSubmit}>
+              {message && (
+                <div 
+                  className={`${messageType === 'success' ? 'success-message' : 'error-message'} animation`} 
+                  style={{"--i": 0, "--j": 20} as React.CSSProperties}
+                >
+                  {message}
+                </div>
+              )}
+              
+              <div className="input-box animation" style={{"--i": 1, "--j": 22} as React.CSSProperties}>
+                <input 
+                  type="email" 
+                  id="email" 
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required 
+                />
+                <label>Email</label>
+                <i className="class"></i>
+              </div>
+
+              <div className="input-box animation" style={{"--i": 2, "--j": 23} as React.CSSProperties}>
+                <input 
+                  type="text" 
+                  id="name"
+                  name="name" 
+                  value={formData.name}
+                  onChange={handleChange}
+                  required 
+                />
+                <label>Username</label>
+                <i className="class"></i>
+              </div>
+
+              <div className="input-box animation" style={{"--i": 3, "--j": 24} as React.CSSProperties}>
+                <input 
+                  type="password" 
+                  id="password"
+                  name="password" 
+                  value={formData.password}
+                  onChange={handleChange}
+                  required 
+                />
+                <label>Password</label>
+                <i className="class"></i>
+              </div>
+
+              <div className="select-box animation" style={{"--i": 4, "--j": 25} as React.CSSProperties}>
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="USER">User</option>
+                  <option value="MODERATOR">Moderator</option>
+                  <option value="ADMIN">Administrator</option>
+                </select>
+                <label>Role</label>
+              </div>
+
+              <button type="submit" className="btn animation" style={{"--i": 5, "--j": 26} as React.CSSProperties}>
+                Sign Up
+              </button>
+              
+              <div className="logreg-link animation" style={{"--i": 6, "--j": 27} as React.CSSProperties}>
+                <p>Already have an account? <Link href="/login" className="login-link">Login</Link></p>
+              </div>
+            </form>
+          </div>
+
+          <div className="info-text signup">
+            <h2 className="animation" style={{"--i": 0, "--j": 20} as React.CSSProperties}>Join DevTrivia!</h2>
+            <p className="animation" style={{"--i": 1, "--j": 21} as React.CSSProperties}>
+              Create your account to start creating quizzes, join competitions, and test your knowledge with our tech trivia platform.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
