@@ -15,14 +15,28 @@ export default function SignupPage() {
   });
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'error' | 'success'>('error');
+  const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear suggestions when user starts typing a new username
+    if (name === 'name' && usernameSuggestions.length > 0) {
+      setUsernameSuggestions([]);
+    }
+  };
+
+  const selectSuggestion = (suggestion: string) => {
+    setFormData(prev => ({ ...prev, name: suggestion }));
+    setUsernameSuggestions([]);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setMessage('');
+    setUsernameSuggestions([]);
+    
     try {
       const response = await fetch(`${BACKEND}/auth/signup`, {
         method: 'POST',
@@ -32,13 +46,32 @@ export default function SignupPage() {
         body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const error = await response.json();
         setMessageType('error');
-        throw new Error(error.message || 'Signup failed');
+        
+        // Handle username suggestions
+        if (data.message?.includes('username already exists') || 
+            data.message?.includes('User with this username already exists')) {
+          setMessage('This username is already taken. Please choose another or select from the suggestions below.');
+          if (data.suggestions && Array.isArray(data.suggestions)) {
+            setUsernameSuggestions(data.suggestions);
+          }
+          return;
+        }
+        
+        // Handle email already exists
+        if (data.message?.includes('email already exists') || 
+            data.message?.includes('User with this email already exists')) {
+          setMessage('This email is already registered. Please use a different email or login with this address.');
+          return;
+        }
+        
+        // General error
+        throw new Error(data.message || 'Signup failed');
       }
 
-      const data = await response.json();
       localStorage.setItem('user', JSON.stringify({
         id: data.user.id,
         name: data.user.name,
@@ -56,13 +89,7 @@ export default function SignupPage() {
       }, 1500);
     } catch (error: unknown) {
       if (error instanceof Error) {
-        if (error.message.includes('email already exists')) {
-          setMessage('This email is already registered. Please use a different email.');
-        } else if (error.message.includes('username already exists')) {
-          setMessage('This username is already taken. Please choose another.');
-        } else {
-          setMessage(error.message);
-        }
+        setMessage(error.message);
       } else {
         setMessage('Signup failed. Please try again.');
       }
@@ -85,6 +112,24 @@ export default function SignupPage() {
                   style={{"--i": 0, "--j": 20} as React.CSSProperties}
                 >
                   {message}
+                </div>
+              )}
+              
+              {usernameSuggestions.length > 0 && (
+                <div className="suggestions-container animation" style={{"--i": 0, "--j": 21} as React.CSSProperties}>
+                  <p className="suggestions-title">Try one of these usernames:</p>
+                  <div className="suggestions-list">
+                    {usernameSuggestions.map((suggestion, index) => (
+                      <button 
+                        type="button"
+                        key={index}
+                        onClick={() => selectSuggestion(suggestion)}
+                        className="suggestion-button"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
               

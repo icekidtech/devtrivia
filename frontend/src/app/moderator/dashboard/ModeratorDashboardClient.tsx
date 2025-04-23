@@ -361,7 +361,6 @@ export default function ModeratorDashboardClient() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between mb-8 border-b border-cyan-400/30 pb-4">
-        <span className="font-bold text-lg">Welcome, <span className="text-cyan-400">{user?.name || 'Moderator'}</span></span>
         <h1 className="text-3xl font-bold text-center flex-1">Moderator Dashboard</h1>
       </div>
 

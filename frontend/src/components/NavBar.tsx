@@ -114,8 +114,8 @@ export default function NavBar() {
                 </div>
                 
                 {/* Welcome message */}
-                <span className="text-gray-200 font-semibold">Welcome, {user.name}!</span>
-              </div>
+                <span className="text-gray-200 font-semibold">Welcome, {user.name}</span>
+              </div> 
               
               <Link 
                 href={`/${user.role.toLowerCase()}/dashboard`}
