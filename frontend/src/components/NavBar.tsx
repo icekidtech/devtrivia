@@ -87,9 +87,6 @@ export default function NavBar() {
               <Link href="/about" className="text-gray-200 hover:text-cyan-400 transition-colors duration-300">
                 About Us
               </Link>
-              <Link href="/signup" className="text-gray-200 hover:text-cyan-400 transition-colors duration-300">
-                Signup
-              </Link>
               <Link href="/login" className="cyberpunk-btn">
                 Login
               </Link>
