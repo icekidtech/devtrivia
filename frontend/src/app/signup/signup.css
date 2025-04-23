@@ -290,6 +290,43 @@
   text-shadow: 0 0 5px rgba(0, 212, 255, 1), 0 0 20px rgba(0, 212, 255, 0.5);
 }
 
+.suggestions-container {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(0, 212, 255, 0.4);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.suggestions-title {
+  font-size: 14px;
+  color: var(--text-color);
+  margin-bottom: 8px;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.suggestion-button {
+  background: rgba(0, 212, 255, 0.15);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  color: var(--primary-color);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.suggestion-button:hover {
+  background: rgba(0, 212, 255, 0.3);
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.6);
+  transform: translateY(-2px);
+}
+
 /* Make responsive */
 @media (max-width: 850px) {
   .wrapper {
