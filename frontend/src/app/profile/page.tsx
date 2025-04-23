@@ -208,7 +208,7 @@ export default function ProfilePage() {
         <div className="flex flex-col md:flex-row gap-8">
           {/* Profile image */}
           <div className="flex flex-col items-center">
-            <div className="mb-4 w-40 h-40 rounded-full overflow-hidden bg-gray-200">
+            <div className="mb-4 w-40 h-40 rounded-full overflow-hidden bg-background border-2 border-primary/50 relative">
               {imagePreview ? (
                 <img
                   src={imagePreview}
@@ -216,14 +216,15 @@ export default function ProfilePage() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="flex items-center justify-center w-full h-full bg-gray-200">
-                  <span className="text-4xl text-gray-400">
+                <div className="flex items-center justify-center w-full h-full">
+                  <span className="text-4xl text-primary">
                     {user.name?.charAt(0).toUpperCase() || '?'}
                   </span>
                 </div>
               )}
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-secondary/10 opacity-60 pointer-events-none"></div>
             </div>
-            <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">
+            <label className="cursor-pointer cyberpunk-btn-outline">
               Upload Photo
               <input
                 type="file"

@@ -33,7 +33,7 @@ export default function AdminDashboardClient() {
       fetch(`${BACKEND}/questions`).then(r => r.json()),
       fetch(`${BACKEND}/answers`).then(r => r.json()),
     ]).then(([users, quizzes, questions, answers]) => {
-      console.log('Fetched users:', users); // <-- Add this line
+      console.log('Fetched users:', users);
       setUsers(Array.isArray(users) ? users : []);
       setQuizzes(Array.isArray(quizzes) ? quizzes : []);
       setQuestions(Array.isArray(questions) ? questions : []);
@@ -136,14 +136,14 @@ export default function AdminDashboardClient() {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <span className="font-bold text-lg">Welcome, {userName}</span>
+      <div className="flex items-center justify-between border-b border-cyan-400/30 pb-4">
+        <span className="font-bold text-lg">Welcome, <span className="text-cyan-400">{userName}</span></span>
         <h1 className="text-3xl font-bold text-center flex-1">Administrator Dashboard</h1>
       </div>
 
       {/* Users */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4">Manage Users</h2>
+      <section className="glass-card">
+        <h2 className="text-2xl font-bold mb-4 text-cyan-400">Manage Users</h2>
         <table className="w-full border-collapse border border-gray-300 text-sm">
           <thead>
             <tr>
@@ -163,7 +163,7 @@ export default function AdminDashboardClient() {
                   <select
                     value={user.role}
                     onChange={e => handleRoleChange(user.id, e.target.value)}
-                    className="border rounded px-2 py-1"
+                    className="bg-slate-900/30 border border-cyan-400/40 text-gray-200 rounded"
                   >
                     <option value="USER">USER</option>
                     <option value="MODERATOR">MODERATOR</option>
@@ -171,7 +171,7 @@ export default function AdminDashboardClient() {
                   </select>
                   <button
                     onClick={() => handleDeleteUser(user.id)}
-                    className="ml-2 text-red-600 hover:underline"
+                    className="ml-2 text-red-400 hover:underline"
                   >
                     Delete
                   </button>
@@ -183,8 +183,8 @@ export default function AdminDashboardClient() {
       </section>
 
       {/* Quizzes */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4">Manage Quizzes</h2>
+      <section className="glass-card">
+        <h2 className="text-2xl font-bold mb-4 text-cyan-400">Manage Quizzes</h2>
         <table className="w-full border-collapse border border-gray-300 text-sm">
           <thead>
             <tr>
@@ -201,21 +201,21 @@ export default function AdminDashboardClient() {
                   <input
                     defaultValue={quiz.title}
                     onBlur={e => handleQuizUpdate(quiz.id, e.target.value, quiz.description)}
-                    className="border rounded px-2 py-1"
+                    className="cyberpunk-input"
                   />
                 </td>
                 <td className="border px-2 py-1">
                   <input
                     defaultValue={quiz.description}
                     onBlur={e => handleQuizUpdate(quiz.id, quiz.title, e.target.value)}
-                    className="border rounded px-2 py-1"
+                    className="cyberpunk-input"
                   />
                 </td>
                 <td className="border px-2 py-1">{quiz.ownerId}</td>
                 <td className="border px-2 py-1">
                   <button
                     onClick={() => handleDeleteQuiz(quiz.id)}
-                    className="ml-2 text-red-600 hover:underline"
+                    className="ml-2 text-red-400 hover:underline"
                   >
                     Delete
                   </button>
@@ -227,8 +227,8 @@ export default function AdminDashboardClient() {
       </section>
 
       {/* Questions */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4">Manage Questions</h2>
+      <section className="glass-card">
+        <h2 className="text-2xl font-bold mb-4 text-cyan-400">Manage Questions</h2>
         <table className="w-full border-collapse border border-gray-300 text-sm">
           <thead>
             <tr>
@@ -244,14 +244,14 @@ export default function AdminDashboardClient() {
                   <input
                     defaultValue={q.text}
                     onBlur={e => handleQuestionUpdate(q.id, e.target.value)}
-                    className="border rounded px-2 py-1"
+                    className="cyberpunk-input"
                   />
                 </td>
                 <td className="border px-2 py-1">{q.quizId}</td>
                 <td className="border px-2 py-1">
                   <button
                     onClick={() => handleDeleteQuestion(q.id)}
-                    className="ml-2 text-red-600 hover:underline"
+                    className="ml-2 text-red-400 hover:underline"
                   >
                     Delete
                   </button>
@@ -263,8 +263,8 @@ export default function AdminDashboardClient() {
       </section>
 
       {/* Answers */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4">Manage Answers</h2>
+      <section className="glass-card">
+        <h2 className="text-2xl font-bold mb-4 text-cyan-400">Manage Answers</h2>
         <table className="w-full border-collapse border border-gray-300 text-sm">
           <thead>
             <tr>
@@ -280,14 +280,14 @@ export default function AdminDashboardClient() {
                   <input
                     defaultValue={a.text}
                     onBlur={e => handleAnswerUpdate(a.id, e.target.value)}
-                    className="border rounded px-2 py-1"
+                    className="cyberpunk-input"
                   />
                 </td>
                 <td className="border px-2 py-1">{a.questionId}</td>
                 <td className="border px-2 py-1">
                   <button
                     onClick={() => handleDeleteAnswer(a.id)}
-                    className="ml-2 text-red-600 hover:underline"
+                    className="ml-2 text-red-400 hover:underline"
                   >
                     Delete
                   </button>

@@ -57,14 +57,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="login-container">
+    <div className="login-container cyberpunk-login">
       <div className="wrapper">
         <span className="bg-animate"></span>
         <span className="bg-animate2"></span>
 
         <div>
           <div className="form-box login">
-            <h2 className="animation" style={{"--i": 0, "--j": 21} as React.CSSProperties}>Login</h2>
+            <h2 className="animation neon-text" style={{"--i": 0, "--j": 21} as React.CSSProperties}>Login</h2>
             <form onSubmit={handleSubmit}>
               {message && (
                 <div className="error-message animation" style={{"--i": 0, "--j": 20} as React.CSSProperties}>
@@ -103,14 +103,14 @@ export default function LoginPage() {
               </button>
               
               <div className="logreg-link animation" style={{"--i": 4, "--j": 25} as React.CSSProperties}>
-                <p>Don't have an account? <Link href="/signup" className="register-link">Sign Up</Link></p>
-                <p>Forgot Password? <Link href="#" className="register-link">Reset</Link></p>
+                <p>Don't have an account? <Link href="/signup" className="register-link text-primary">Sign Up</Link></p>
+                <p>Forgot Password? <Link href="#" className="register-link text-secondary">Reset</Link></p>
               </div>
             </form>
           </div>
 
           <div className="info-text login">
-            <h2 className="animation" style={{"--i": 0, "--j": 20} as React.CSSProperties}>Welcome Back!</h2>
+            <h2 className="animation neon-text" style={{"--i": 0, "--j": 20} as React.CSSProperties}>Welcome Back!</h2>
             <p className="animation" style={{"--i": 1, "--j": 21} as React.CSSProperties}>
               Dev Trivia - Test your knowledge, compete with others, and have fun!
             </p>

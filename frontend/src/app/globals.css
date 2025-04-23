@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,13 +7,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: 'Inter', 'Poppins', system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,12 +17,70 @@
   }
 }
 
-body {
-  @apply bg-background text-foreground font-sans;
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+  }
+
+  button, 
+  .btn {
+    @apply transition duration-300 transform hover:scale-105;
+  }
+
+  input, 
+  select, 
+  textarea {
+    @apply bg-slate-900/50 border border-cyan-400/30 text-gray-200 focus:border-cyan-400 focus:ring focus:ring-cyan-400/20 rounded;
+  }
+  
+  /* Neon text effect for headings */
+  .neon-text {
+    text-shadow: 0 0 5px rgba(0, 212, 255, 1), 0 0 20px rgba(0, 212, 255, 0.5);
+  }
+  
+  /* Glow effect on hover for interactive elements */
+  .glow-on-hover:hover {
+    box-shadow: 0 0 8px rgba(0, 212, 255, 1), 0 0 20px rgba(0, 212, 255, 0.4);
+  }
+  
+  /* Glass card effect */
+  .glass-card {
+    @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-lg rounded-lg;
+  }
 }
 
-/* Import Montserrat for login page */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+/* Custom classes for common components */
+@layer components {
+  .cyberpunk-card {
+    @apply glass-card p-6 relative overflow-hidden;
+  }
+  
+  .cyberpunk-card::before {
+    content: '';
+    @apply absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-fuchsia-500;
+  }
+  
+  .cyberpunk-input {
+    @apply bg-slate-900/30 border border-cyan-400/40 text-gray-200 px-4 py-2 
+    focus:outline-none focus:ring-2 focus:ring-cyan-400/50 rounded;
+  }
+  
+  .cyberpunk-btn {
+    @apply bg-cyan-400/90 text-slate-900 font-bold py-2 px-6 rounded
+    transition duration-300 hover:bg-cyan-400 shadow-md hover:shadow-neon-cyan;
+  }
+  
+  .cyberpunk-btn-secondary {
+    @apply bg-fuchsia-500/90 text-slate-900 font-bold py-2 px-6 rounded
+    transition duration-300 hover:bg-fuchsia-500 shadow-md hover:shadow-neon-magenta;
+  }
+  
+  .cyberpunk-btn-outline {
+    @apply border-2 border-cyan-400 text-cyan-400 font-bold py-2 px-6 rounded
+    transition duration-300 hover:bg-cyan-400/10 shadow-md hover:shadow-neon-cyan;
+  }
+}
