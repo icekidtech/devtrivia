@@ -1,8 +1,10 @@
-export default function UserDashboard() {
-  return (
-    <div className="text-center">
-      <h1 className="text-3xl font-bold">Welcome to the User Dashboard</h1>
-      <p className="mt-4">Participate in quizzes and view leaderboards here.</p>
-    </div>
-  );
+import UserDashboardClient from './UserDashboardClient';
+
+export const metadata = {
+  title: 'User Dashboard | DevTrivia',
+  description: 'Join quizzes, view your past results, and track your performance.',
+};
+
+export default function UserDashboardPage() {
+  return <UserDashboardClient />;
 }
