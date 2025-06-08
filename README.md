@@ -67,8 +67,8 @@ devtrivia/
 ```bash
 git clone https://github.com/icekidtech/devtrivia.git
 cd devtrivia
-cd backend && npm install
-cd ../frontend && npm install
+cd backend && pnpm install
+cd ../frontend && ppnpm install
 ```
 
 ### 2. Set Up Database  
