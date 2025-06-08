@@ -90,12 +90,12 @@ cd ../frontend && ppnpm install
 - **Backend**:  
   ```bash
   cd backend
-  npm run start:dev  # http://localhost:3000
+  pnpm run start:dev  # http://localhost:3000
   ```
 - **Frontend**:  
   ```bash
   cd ../frontend
-  npm run dev        # http://localhost:3001
+  pnpm run dev        # http://localhost:3001
   ```
 
 ---
@@ -121,7 +121,7 @@ cd ../frontend && ppnpm install
 ## 🔧 Scripts  
 | **Command**               | **Action**                          |  
 |--------------------------|------------------------------------|  
-| `npm run dev` (FE/BE)    | Start dev server                   |  
+| `pnpm run dev` (FE/BE)   | Start dev server                   |  
 | `npx prisma studio`      | Open DB GUI (http://localhost:5555)|  
 | `npx prisma migrate dev` | Run DB migrations                  |  
 
