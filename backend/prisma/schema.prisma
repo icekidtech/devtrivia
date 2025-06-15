@@ -53,13 +53,17 @@ model Answer {
 }
 
 model Result {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  quiz      Quiz     @relation(fields: [quizId], references: [id])
-  quizId    String
-  score     Int
-  createdAt DateTime @default(now())
+  id            String   @id @default(uuid())
+  userId        String
+  quizId        String
+  score         Int
+  totalQuestions Int
+  correctAnswers Int
+  answersJson   String?  // Store selected answers as JSON
+  createdAt     DateTime @default(now())
+  
+  user          User     @relation(fields: [userId], references: [id])
+  quiz          Quiz     @relation(fields: [quizId], references: [id])
 }
 
 enum Role {
