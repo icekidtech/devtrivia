@@ -1,9 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import QRCode from 'react-qr-code';
 import { User, Quiz, Question, Answer, Option, LeaderboardEntry } from '@/types';
 import { handleApiError, safeFetch } from '@/utils/errorHandling';
+import { 
+  BarChart3, 
+  User as UserIcon, 
+  Settings, 
+  LogOut,
+  PlusCircle,
+  List,
+  CheckCircle,
+  ChevronDown,
+  Award
+} from 'lucide-react';
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -20,6 +32,9 @@ export default function ModeratorDashboardClient() {
   const [options, setOptions] = useState<Option[]>([{ text: '', isCorrect: false }]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [activeNav, setActiveNav] = useState('overview');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [showQuestionEditor, setShowQuestionEditor] = useState(false);
@@ -30,25 +45,20 @@ export default function ModeratorDashboardClient() {
       try {
         const u = JSON.parse(stored);
         setUser(u);
-        console.log('User from localStorage:', u);
         
         fetch(`${BACKEND}/quizzes`)
           .then(res => res.json())
           .then(data => {
-            console.log('Quizzes from API:', data);
             const userQuizzes = data.filter((q: any) => {
               if (!q.owner) {
-                console.log('Quiz missing owner data:', q);
                 return false;
               }
               return q.owner.name === u.name;
             });
-            console.log('Filtered quizzes:', userQuizzes);
             setQuizzes(userQuizzes);
             setLoading(false);
           });
       } catch (err) {
-        console.error('Error parsing user from localStorage:', err);
         setError('User data corrupted.');
         setLoading(false);
       }
@@ -56,11 +66,19 @@ export default function ModeratorDashboardClient() {
       setError('User not found. Please log in again.');
       setLoading(false);
     }
+    
+    // Close dropdown when clicking outside
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
     if (selectedQuizId) {
-      console.log(`Fetching questions for quiz: ${selectedQuizId}`);
       fetch(`${BACKEND}/questions/quiz/${selectedQuizId}`)
         .then(res => {
           if (!res.ok) {
@@ -69,29 +87,30 @@ export default function ModeratorDashboardClient() {
           return res.json();
         })
         .then(data => {
-          console.log('Questions received:', data);
           setQuestions(Array.isArray(data) ? data : []);
         })
         .catch(err => {
-          console.error('Error fetching questions:', err);
           setError(`Failed to fetch questions: ${err.message}`);
           setQuestions([]);
         });
     }
   }, [selectedQuizId]);
 
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  };
+
   const handleCreateQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     if (!user) {
       setError('User not loaded.');
-      console.error('User not loaded.');
       return;
     }
     
     if (!user.name) {
       setError('Username not found. Please log in again.');
-      console.error('Missing username');
       return;
     }
     
@@ -101,7 +120,6 @@ export default function ModeratorDashboardClient() {
     }
     
     try {
-      console.log('Creating quiz with:', { title, description, ownerName: user.name });
       const res = await fetch(`${BACKEND}/quizzes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -115,7 +133,6 @@ export default function ModeratorDashboardClient() {
       if (!res.ok) {
         const errMsg = await res.text();
         setError(`Failed to create quiz: ${errMsg}`);
-        console.error('Failed to create quiz:', errMsg);
         return;
       }
       
@@ -123,10 +140,8 @@ export default function ModeratorDashboardClient() {
       setQuizzes([...quizzes, newQuiz]);
       setTitle('');
       setDescription('');
-      console.log('Quiz created:', newQuiz);
     } catch (err) {
       setError('An error occurred while creating the quiz.');
-      console.error('Error in handleCreateQuiz:', err);
     }
   };
 
@@ -143,6 +158,10 @@ export default function ModeratorDashboardClient() {
   };
 
   const handleDeleteQuiz = (id: string) => {
+    if (!confirm("Are you sure you want to delete this quiz? This cannot be undone.")) {
+      return;
+    }
+    
     fetch(`${BACKEND}/quizzes/${id}`, { method: 'DELETE' })
       .then(res => {
         if (res.ok) setQuizzes(quizzes.filter(q => q.id !== id));
@@ -157,7 +176,6 @@ export default function ModeratorDashboardClient() {
       });
       
       setQuizzes(quizzes.map(q => q.id === id ? updatedQuiz : q));
-      console.log('Quiz published successfully:', updatedQuiz);
     } catch (error) {
       setError(handleApiError(error, 'Failed to publish quiz'));
     }
@@ -176,9 +194,7 @@ export default function ModeratorDashboardClient() {
       
       const updatedQuiz = await res.json();
       setQuizzes(quizzes.map(q => q.id === id ? updatedQuiz : q));
-      console.log('Quiz unpublished:', updatedQuiz);
     } catch (err) {
-      console.error('Error unpublishing quiz:', err);
       setError(err instanceof Error ? err.message : 'Failed to unpublish quiz');
     }
   };
@@ -212,12 +228,10 @@ export default function ModeratorDashboardClient() {
           : "At least two answer options are required";
       
       setError(errorMessage);
-      console.error(errorMessage);
       return;
     }
     
     try {
-      console.log('Creating question:', { text: questionText, quizId: selectedQuizId });
       const questionRes = await fetch(`${BACKEND}/questions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -230,9 +244,7 @@ export default function ModeratorDashboardClient() {
       }
       
       const question = await questionRes.json();
-      console.log('Question created:', question);
       
-      console.log('Creating answers:', options);
       await Promise.all(options.map(opt =>
         fetch(`${BACKEND}/answers`, {
           method: 'POST',
@@ -257,10 +269,8 @@ export default function ModeratorDashboardClient() {
       }
       const refreshedQuestions = await questionsRes.json();
       setQuestions(Array.isArray(refreshedQuestions) ? refreshedQuestions : []);
-      console.log('Questions refreshed:', refreshedQuestions);
       
     } catch (err) {
-      console.error('Error in handleCreateQuestion:', err);
       setError(err instanceof Error ? err.message : 'An error occurred while creating the question');
     }
   };
@@ -329,9 +339,7 @@ export default function ModeratorDashboardClient() {
       setEditingQuestion(null);
       setShowQuestionEditor(false);
       
-      console.log('Question updated successfully');
     } catch (err) {
-      console.error('Error updating question:', err);
       setError(err instanceof Error ? err.message : 'An error occurred while updating the question');
     }
   };
@@ -351,302 +359,687 @@ export default function ModeratorDashboardClient() {
       }
 
       setQuestions(questions.filter(q => q.id !== questionId));
-      console.log('Question deleted successfully');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete question';
       setError(errorMessage);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen w-full bg-slate-900">
+        <div className="animate-pulse text-cyan-400 text-2xl">Loading dashboard...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between mb-8 border-b border-cyan-400/30 pb-4">
-        <h1 className="text-3xl font-bold text-center flex-1">Moderator Dashboard</h1>
+    <div className="flex h-screen bg-slate-900 text-gray-200 font-sans">
+      {/* Sidebar */}
+      <div className="w-1/5 min-w-[220px] bg-[#2D2D44] border-r border-cyan-400/30 shadow-lg shadow-cyan-400/5">
+        <div className="p-4 flex items-center justify-center mb-8">
+          <Link href="/" className="block">
+            <h1 className="text-2xl font-bold relative group">
+              <span className="text-cyan-400 neon-text">Dev</span>
+              <span className="text-fuchsia-500 neon-text">Trivia</span>
+            </h1>
+          </Link>
+        </div>
+        
+        <nav className="px-2">
+          <div 
+            className={`flex items-center p-3 mb-2 rounded-md cursor-pointer transition-all ${
+              activeNav === 'overview' 
+                ? 'bg-cyan-400/20 text-cyan-400' 
+                : 'hover:bg-cyan-400/10 hover:text-cyan-400'
+            }`}
+            onClick={() => setActiveNav('overview')}
+          >
+            <BarChart3 className="mr-3 h-5 w-5" />
+            <span>Overview</span>
+          </div>
+          
+          <div 
+            className={`flex items-center p-3 mb-2 rounded-md cursor-pointer transition-all ${
+              activeNav === 'create' 
+                ? 'bg-cyan-400/20 text-cyan-400' 
+                : 'hover:bg-cyan-400/10 hover:text-cyan-400'
+            }`}
+            onClick={() => setActiveNav('create')}
+          >
+            <PlusCircle className="mr-3 h-5 w-5" />
+            <span>Create Quiz</span>
+          </div>
+          
+          <div 
+            className={`flex items-center p-3 mb-2 rounded-md cursor-pointer transition-all ${
+              activeNav === 'manage' 
+                ? 'bg-cyan-400/20 text-cyan-400' 
+                : 'hover:bg-cyan-400/10 hover:text-cyan-400'
+            }`}
+            onClick={() => setActiveNav('manage')}
+          >
+            <List className="mr-3 h-5 w-5" />
+            <span>Manage Quizzes</span>
+          </div>
+          
+          <div 
+            className={`flex items-center p-3 mb-2 rounded-md cursor-pointer transition-all ${
+              activeNav === 'questions' 
+                ? 'bg-cyan-400/20 text-cyan-400' 
+                : 'hover:bg-cyan-400/10 hover:text-cyan-400'
+            }`}
+            onClick={() => {
+              setActiveNav('questions');
+              if (!selectedQuizId && quizzes.length > 0) {
+                setSelectedQuizId(quizzes[0].id);
+              }
+            }}
+          >
+            <CheckCircle className="mr-3 h-5 w-5" />
+            <span>Manage Questions</span>
+          </div>
+          
+          <div 
+            className={`flex items-center p-3 mb-2 rounded-md cursor-pointer transition-all ${
+              activeNav === 'profile' 
+                ? 'bg-cyan-400/20 text-cyan-400' 
+                : 'hover:bg-cyan-400/10 hover:text-cyan-400'
+            }`}
+            onClick={() => setActiveNav('profile')}
+          >
+            <UserIcon className="mr-3 h-5 w-5" />
+            <span>Profile</span>
+          </div>
+        </nav>
       </div>
 
-      {error && (
-        <div className="bg-red-400/20 border border-red-400/40 text-red-400 p-3 rounded-md mb-6">
-          {error}
-        </div>
-      )}
-
-      {/* Create Quiz */}
-      <section className="glass-card mb-8">
-        <h2 className="text-2xl font-bold mb-4 text-cyan-400">Create Quiz</h2>
-        <form onSubmit={handleCreateQuiz} className="flex flex-col md:flex-row gap-3">
-          <input
-            type="text"
-            placeholder="Quiz Title"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            required
-            className="cyberpunk-input flex-1"
-          />
-          <input
-            type="text"
-            placeholder="Description"
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            className="cyberpunk-input flex-1"
-          />
-          <button
-            type="submit"
-            className="bg-cyan-400/90 text-slate-900 font-bold py-2 px-6 rounded transition duration-300 hover:bg-cyan-400 shadow-md hover:shadow-neon-cyan"
-            disabled={loading}
-          >
-            {loading ? 'Loading...' : 'Create'}
-          </button>
-        </form>
-      </section>
-
-      {/* Manage Quizzes */}
-      <section className="mb-8">
-        <h2 className="text-2xl font-bold mb-4 text-cyan-400">Manage Quizzes</h2>
-        <div className="space-y-4">
-          {quizzes.map((quiz: any) => (
-            <div key={quiz.id} className="glass-card">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-200">{quiz.title}</h3>
-                  <p className="text-gray-200/70">{quiz.description}</p>
-                  <p className="text-sm text-gray-200/60 mt-1">
-                    Questions: {quiz.questions?.length || 0}
-                    {quiz.published && (
-                      <span className="ml-4 text-lime-400">
-                        Published
-                      </span>
-                    )}
-                  </p>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  {quiz.published ? (
-                    <div className="text-center">
-                      <div className="bg-cyan-400/10 border border-cyan-400/40 text-cyan-400 px-3 py-1 rounded-md mb-2">
-                        <span className="font-mono font-bold">Join Code: {quiz.joinCode}</span>
-                      </div>
-                      <div className="my-3 bg-slate-900 p-3 inline-block rounded border border-cyan-400/30">
-                        <QRCode 
-                          value={`${window.location.origin}/join?code=${quiz.joinCode}`} 
-                          size={100}
-                          bgColor={"rgba(26, 26, 46, 0.8)"}
-                          fgColor={"#00D4FF"}
-                        />
-                      </div>
-                      <button
-                        onClick={() => handleUnpublishQuiz(quiz.id)}
-                        className="text-red-400 hover:text-red-400 hover:underline text-sm block mt-2"
-                      >
-                        Unpublish Quiz
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => handlePublishQuiz(quiz.id)}
-                      className="bg-cyan-400/90 text-slate-900 font-bold py-2 px-6 rounded transition duration-300 hover:bg-cyan-400 shadow-md hover:shadow-neon-cyan"
-                      disabled={quiz.questions?.length < 1}
-                    >
-                      Publish Quiz
-                    </button>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex space-x-2 mt-4">
-                <button
-                  onClick={() => setSelectedQuizId(quiz.id)}
-                  className="bg-cyan-400/20 hover:bg-cyan-400/30 text-cyan-400 px-4 py-1 rounded border border-cyan-400/30 transition-colors duration-300"
-                >
-                  {quiz.published ? "View Questions" : "Edit Questions"}
-                </button>
-                <button
-                  onClick={() => handleViewLeaderboard(quiz.id)}
-                  className="bg-fuchsia-500/20 hover:bg-fuchsia-500/30 text-fuchsia-500 px-4 py-1 rounded border border-fuchsia-500/30 transition-colors duration-300"
-                >
-                  View Leaderboard
-                </button>
-                {!quiz.published && (
-                  <button
-                    onClick={() => handleDeleteQuiz(quiz.id)}
-                    className="bg-red-400/20 hover:bg-red-400/30 text-red-400 px-4 py-1 rounded border border-red-400/30 transition-colors duration-300"
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Leaderboard */}
-      {selectedQuiz && (
-        <section>
-          <h2 className="text-2xl font-bold mb-4 text-cyan-400">Leaderboard for Quiz</h2>
-          <button onClick={() => setSelectedQuiz(null)} className="mb-2 text-cyan-400 hover:underline">Close</button>
-          <table className="w-full border-collapse border border-gray-300 text-sm">
-            <thead>
-              <tr>
-                <th className="border px-2 py-1">User</th>
-                <th className="border px-2 py-1">Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leaderboard.map((entry, idx) => (
-                <tr key={idx}>
-                  <td className="border px-2 py-1">{entry.userName}</td>
-                  <td className="border px-2 py-1">{entry.score}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-      )}
-
-      {/* Select Quiz to Add Question */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4 text-cyan-400">Add Question to Quiz</h2>
-        <select
-          value={selectedQuizId || ''}
-          onChange={e => setSelectedQuizId(e.target.value)}
-          className="bg-slate-900/30 border border-cyan-400/40 text-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 rounded"
-        >
-          <option value="">Select Quiz</option>
-          {quizzes.map(q => (
-            <option key={q.id} value={q.id}>{q.title}</option>
-          ))}
-        </select>
-        {selectedQuizId && !quizzes.find(q => q.id === selectedQuizId)?.published && (
-          <section className="mt-6">
-            <h2 className="text-xl font-bold mb-3">
-              {editingQuestion ? 'Edit Question' : 'Add Question to Quiz'}
-            </h2>
-            
-            <form onSubmit={editingQuestion ? updateQuestion : handleCreateQuestion} className="space-y-3 glass-card">
-              <input
-                type="text"
-                placeholder="Question text"
-                value={questionText}
-                onChange={e => setQuestionText(e.target.value)}
-                required
-                className="cyberpunk-input w-full"
-              />
-              
-              <div className="space-y-2">
-                <label className="block font-medium text-gray-200">Answer Options</label>
-                {options.map((opt, idx) => (
-                  <div key={idx} className="flex items-center mb-2">
-                    <input
-                      type="text"
-                      placeholder={`Option ${idx + 1}`}
-                      value={opt.text}
-                      onChange={e => updateOptionText(idx, e.target.value)}
-                      required
-                      className="cyberpunk-input mr-3 flex-1"
-                    />
-                    <div className="flex items-center mr-3">
-                      <input
-                        type="radio"
-                        name="correct"
-                        checked={opt.isCorrect}
-                        onChange={() => setCorrect(idx)}
-                        className="mr-1"
-                      />
-                      <span className="text-gray-200">Correct</span>
-                    </div>
-                    
-                    {options.length > 2 && (
-                      <button 
-                        type="button" 
-                        onClick={() => removeOption(idx)} 
-                        className="text-red-400 hover:text-red-400"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                ))}
-                
-                <button
-                  type="button"
-                  onClick={addOption}
-                  className="text-cyan-400 hover:text-cyan-400"
-                >
-                  + Add Option
-                </button>
-              </div>
-              
-              <div className="flex justify-between pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setQuestionText('');
-                    setOptions([{ text: '', isCorrect: false }]);
-                    setEditingQuestion(null);
-                  }}
-                  className="text-gray-200 hover:underline"
-                >
-                  {editingQuestion ? 'Cancel' : 'Clear'}
-                </button>
-                
-                <button
-                  type="submit"
-                  className="bg-cyan-400/90 text-slate-900 font-bold py-2 px-6 rounded transition duration-300 hover:bg-cyan-400 shadow-md hover:shadow-neon-cyan"
-                >
-                  {editingQuestion ? 'Update Question' : 'Add Question'}
-                </button>
-              </div>
-            </form>
-          </section>
-        )}
-      </section>
-
-      {/* List Questions for Selected Quiz */}
-      {selectedQuizId && (
-        <section>
-          <h2 className="text-xl font-bold mb-2 text-cyan-400">
-            Questions for {quizzes.find(q => q.id === selectedQuizId)?.title || 'Selected Quiz'}
+      {/* Main Content */}
+      <div className="flex-1 h-screen overflow-y-auto">
+        {/* Header */}
+        <div className="p-4 flex justify-between items-center border-b border-cyan-400/20 sticky top-0 bg-slate-900/90 backdrop-blur-md z-10">
+          <h2 className="text-xl font-bold text-cyan-400">
+            {activeNav === 'overview' && 'Moderator Dashboard'}
+            {activeNav === 'create' && 'Create Quiz'}
+            {activeNav === 'manage' && 'Manage Quizzes'}
+            {activeNav === 'questions' && 'Manage Questions'}
+            {activeNav === 'profile' && 'User Profile'}
           </h2>
           
-          {questions.length > 0 ? (
-            <ul className="space-y-4">
-              {questions.map(q => (
-                <li key={q.id} className="border rounded p-3 glass-card">
-                  <div className="flex justify-between">
-                    <strong className="text-lg text-gray-200">{q.text}</strong>
+          <div className="flex items-center relative" ref={dropdownRef}>
+            <div 
+              className="flex items-center cursor-pointer"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+            >
+              {user?.profileImage ? (
+                <img 
+                  src={`${BACKEND}${user.profileImage}`}
+                  alt={user.name}
+                  className="w-10 h-10 rounded-full object-cover border-2 border-cyan-400"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/40';
+                  }}
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-fuchsia-500/20 border-2 border-cyan-400/60 flex items-center justify-center font-bold">
+                  {user?.name?.charAt(0).toUpperCase() || '?'}
+                </div>
+              )}
+              
+              <span className="ml-2 font-medium hidden md:block">{user?.name}</span>
+              <ChevronDown className="h-4 w-4 ml-2 text-gray-400" />
+            </div>
+            
+            {/* Dropdown Menu */}
+            {dropdownOpen && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-[#2D2D44] border border-cyan-400/20 rounded-md shadow-lg shadow-cyan-500/20 z-50">
+                <Link 
+                  href="/profile" 
+                  className="flex items-center px-4 py-3 hover:bg-cyan-400/10 text-gray-200"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </Link>
+                
+                <div className="border-t border-cyan-400/20"></div>
+                
+                <button 
+                  onClick={handleLogout} 
+                  className="flex items-center w-full text-left px-4 py-3 hover:bg-cyan-400/10 text-gray-200"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="p-6">
+          {/* Background decorative elements */}
+          <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-400/5 rounded-full filter blur-3xl animate-pulse-slow"></div>
+            <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-fuchsia-500/5 rounded-full filter blur-3xl animate-pulse-slow delay-1000"></div>
+          </div>
+          
+          {/* Error messages */}
+          {error && (
+            <div className="bg-red-400/20 border border-red-400/40 text-red-400 p-3 rounded-md mb-6">
+              {error}
+            </div>
+          )}
+
+          {/* Overview Tab Content */}
+          {activeNav === 'overview' && (
+            <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                {/* Welcome Card */}
+                <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20 shadow-lg">
+                  <h3 className="text-2xl font-semibold mb-3">Welcome, <span className="text-cyan-400">{user?.name}</span></h3>
+                  <p className="text-gray-400">Manage your quizzes, add questions, and track participants' performance.</p>
+                  
+                  <div className="mt-6">
+                    <button 
+                      onClick={() => setActiveNav('create')}
+                      className="bg-cyan-400 text-slate-900 px-6 py-2 rounded-md font-semibold hover:bg-cyan-500 transition transform hover:scale-105 mr-4"
+                    >
+                      Create Quiz
+                    </button>
+                    <button
+                      onClick={() => setActiveNav('manage')}
+                      className="bg-[#3A3A55] text-gray-200 px-6 py-2 rounded-md border border-cyan-400/20 font-semibold hover:bg-[#3A3A55]/80 transition"
+                    >
+                      Manage Quizzes
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Quiz Stats */}
+                <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20 shadow-lg">
+                  <h3 className="text-lg font-semibold mb-4 text-cyan-400">Quiz Statistics</h3>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="border-b border-gray-600/30 pb-3">
+                      <p className="text-sm text-gray-400">Total Quizzes</p>
+                      <p className="font-bold text-2xl">{quizzes.length}</p>
+                    </div>
                     
-                    {!quizzes.find(quiz => quiz.id === selectedQuizId)?.published && (
-                      <div>
-                        <button
-                          onClick={() => startEditingQuestion(q)}
-                          className="text-cyan-400 hover:underline mr-3"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteQuestion(q.id)}
-                          className="text-red-400 hover:underline"
-                        >
-                          Delete
-                        </button>
+                    <div className="border-b border-gray-600/30 pb-3">
+                      <p className="text-sm text-gray-400">Published Quizzes</p>
+                      <p className="font-bold text-2xl">{quizzes.filter(q => q.published).length}</p>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm text-gray-400">Total Questions</p>
+                      <p className="font-bold text-2xl">
+                        {quizzes.reduce((acc, quiz) => acc + (quiz.questions?.length || 0), 0)}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm text-gray-400">Participants</p>
+                      <p className="font-bold text-2xl">--</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Recent Quizzes */}
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold mb-4 text-cyan-400">Recent Quizzes</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {quizzes.slice(0, 3).map((quiz, i) => (
+                    <div key={quiz.id} className="bg-[#2D2D44]/80 p-4 rounded-lg border border-cyan-400/20 cursor-pointer transform transition hover:scale-[1.03] hover:shadow-cyan-500/20">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-semibold">{quiz.title}</h4>
+                        {quiz.published && (
+                          <span className="text-xs bg-lime-400/20 text-lime-400 px-2 py-1 rounded">Published</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-400 mt-1">{quiz.description || 'No description'}</p>
+                      <div className="flex justify-between items-center mt-3">
+                        <span className="text-xs bg-cyan-400/20 text-cyan-400 px-2 py-1 rounded">
+                          {quiz.questions?.length || 0} questions
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Create Quiz Tab Content */}
+          {activeNav === 'create' && (
+            <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20">
+              <h3 className="text-xl font-semibold mb-6">Create New Quiz</h3>
+              
+              <form onSubmit={handleCreateQuiz} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-400">Quiz Title</label>
+                  <input
+                    type="text"
+                    placeholder="Enter quiz title"
+                    value={title}
+                    onChange={e => setTitle(e.target.value)}
+                    required
+                    className="bg-[#3A3A55] w-full text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-400">Quiz Description</label>
+                  <textarea
+                    placeholder="Enter quiz description"
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    className="bg-[#3A3A55] w-full text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400 min-h-[100px]"
+                  ></textarea>
+                </div>
+                
+                <div>
+                  <button 
+                    type="submit"
+                    className="bg-cyan-400 text-slate-900 px-6 py-2 rounded-md font-semibold hover:bg-cyan-500 transition transform hover:scale-105 mr-4"
+                  >
+                    Create Quiz
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+          
+          {/* Manage Quizzes Tab Content */}
+          {activeNav === 'manage' && (
+            <div>
+              <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20">
+                <h3 className="text-xl font-semibold mb-6">Your Quizzes</h3>
+                
+                {quizzes.length > 0 ? (
+                  <div className="space-y-4">
+                    {quizzes.map((quiz) => (
+                      <div key={quiz.id} className="border-b border-gray-600/30 pb-4 last:border-b-0 last:pb-0">
+                        <div className="flex flex-wrap justify-between items-start">
+                          <div className="mb-2">
+                            <h4 className="text-lg font-semibold">{quiz.title}</h4>
+                            <p className="text-gray-400">{quiz.description || 'No description'}</p>
+                            <p className="text-sm text-gray-500 mt-1">
+                              Questions: {quiz.questions?.length || 0}
+                              {quiz.published && (
+                                <span className="ml-2 text-lime-400">• Published</span>
+                              )}
+                            </p>
+                          </div>
+                          
+                          <div className="flex flex-col items-end gap-2">
+                            {quiz.published ? (
+                              <div className="text-center">
+                                <div className="bg-cyan-400/10 border border-cyan-400/40 text-cyan-400 px-3 py-1 rounded-md mb-2">
+                                  <span className="font-mono font-bold">Join Code: {quiz.joinCode}</span>
+                                </div>
+                                <div className="my-3 bg-slate-900 p-3 inline-block rounded border border-cyan-400/30">
+                                  <QRCode 
+                                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/join?code=${quiz.joinCode}`} 
+                                    size={100}
+                                    bgColor={"rgba(26, 26, 46, 0.8)"}
+                                    fgColor={"#00D4FF"}
+                                  />
+                                </div>
+                                <button
+                                  onClick={() => handleUnpublishQuiz(quiz.id)}
+                                  className="text-red-400 hover:text-red-400 hover:underline text-sm block mt-2"
+                                >
+                                  Unpublish Quiz
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => handlePublishQuiz(quiz.id)}
+                                className="bg-cyan-400 text-slate-900 px-4 py-2 rounded-md font-semibold hover:bg-cyan-500 transition"
+                                disabled={quiz.questions?.length < 1}
+                              >
+                                Publish Quiz
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex space-x-2 mt-4">
+                          <button
+                            onClick={() => {
+                              setSelectedQuizId(quiz.id);
+                              setActiveNav('questions');
+                            }}
+                            className="bg-cyan-400/20 hover:bg-cyan-400/30 text-cyan-400 px-4 py-1 rounded border border-cyan-400/30 transition-colors duration-300"
+                          >
+                            {quiz.published ? "View Questions" : "Edit Questions"}
+                          </button>
+                          <button
+                            onClick={() => handleViewLeaderboard(quiz.id)}
+                            className="bg-fuchsia-500/20 hover:bg-fuchsia-500/30 text-fuchsia-500 px-4 py-1 rounded border border-fuchsia-500/30 transition-colors duration-300"
+                          >
+                            View Leaderboard
+                          </button>
+                          {!quiz.published && (
+                            <button
+                              onClick={() => handleDeleteQuiz(quiz.id)}
+                              className="bg-red-400/20 hover:bg-red-400/30 text-red-400 px-4 py-1 rounded border border-red-400/30 transition-colors duration-300"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-400 text-center py-10">
+                    <p>You haven't created any quizzes yet.</p>
+                    <button 
+                      onClick={() => setActiveNav('create')}
+                      className="mt-4 bg-cyan-400/20 text-cyan-400 px-4 py-2 rounded-md hover:bg-cyan-400/30 transition"
+                    >
+                      Create Your First Quiz
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              {/* Leaderboard Modal */}
+              {selectedQuiz && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                  <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-xl font-bold text-cyan-400">
+                        Leaderboard for {quizzes.find(q => q.id === selectedQuiz)?.title}
+                      </h2>
+                      <button 
+                        onClick={() => setSelectedQuiz(null)}
+                        className="text-gray-400 hover:text-gray-200"
+                      >
+                        Close
+                      </button>
+                    </div>
+                    
+                    {leaderboard && leaderboard.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="text-left border-b border-cyan-400/20">
+                              <th className="pb-2">Rank</th>
+                              <th className="pb-2">Player</th>
+                              <th className="pb-2">Score</th>
+                              <th className="pb-2">Date</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {leaderboard.map((entry, idx) => (
+                              <tr key={idx} className="border-b border-gray-600/30">
+                                <td className="py-3">{idx + 1}</td>
+                                <td className="py-3">{entry.userName}</td>
+                                <td className="py-3 font-medium text-cyan-400">{entry.score}</td>
+                                <td className="py-3">{new Date(entry.date).toLocaleDateString()}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="text-gray-400 text-center py-8">
+                        <p>No entries in the leaderboard yet.</p>
                       </div>
                     )}
                   </div>
-                  
-                  <ul className="mt-2 ml-5 list-disc">
-                    {q.answers?.map((a: Answer) => (
-                      <li key={a.id} className={a.isCorrect ? 'text-lime-400 font-medium' : 'text-gray-200'}>
-                        {a.text} {a.isCorrect && '✓'}
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-200/50 italic">No questions added to this quiz yet.</p>
+                </div>
+              )}
+            </div>
           )}
-        </section>
-      )}
+          
+          {/* Questions Tab Content */}
+          {activeNav === 'questions' && (
+            <div>
+              {selectedQuizId ? (
+                <div className="space-y-8">
+                  <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-semibold">
+                        {quizzes.find(q => q.id === selectedQuizId)?.title} Questions
+                      </h3>
+                      
+                      <select
+                        value={selectedQuizId}
+                        onChange={e => setSelectedQuizId(e.target.value)}
+                        className="bg-[#3A3A55] text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400"
+                      >
+                        {quizzes.map(q => (
+                          <option key={q.id} value={q.id}>{q.title}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    {!quizzes.find(q => q.id === selectedQuizId)?.published && (
+                      <div className="mb-8">
+                        <h4 className="text-lg font-semibold mb-4">
+                          {editingQuestion ? 'Edit Question' : 'Add New Question'}
+                        </h4>
+                        
+                        <form onSubmit={editingQuestion ? updateQuestion : handleCreateQuestion} className="space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-sm text-gray-400">Question Text</label>
+                            <input
+                              type="text"
+                              placeholder="Enter question text"
+                              value={questionText}
+                              onChange={e => setQuestionText(e.target.value)}
+                              required
+                              className="bg-[#3A3A55] w-full text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label className="text-sm text-gray-400">Answer Options</label>
+                            {options.map((opt, idx) => (
+                              <div key={idx} className="flex items-center space-x-2 mb-3">
+                                <input
+                                  type="text"
+                                  placeholder={`Option ${idx + 1}`}
+                                  value={opt.text}
+                                  onChange={e => updateOptionText(idx, e.target.value)}
+                                  required
+                                  className="bg-[#3A3A55] flex-1 text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400"
+                                />
+                                <div className="flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="correct"
+                                    checked={opt.isCorrect}
+                                    onChange={() => setCorrect(idx)}
+                                    className="mr-1"
+                                  />
+                                  <span className="text-gray-200">Correct</span>
+                                </div>
+                                
+                                {options.length > 2 && (
+                                  <button 
+                                    type="button" 
+                                    onClick={() => removeOption(idx)} 
+                                    className="text-red-400 hover:text-red-500"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            
+                            <button
+                              type="button"
+                              onClick={addOption}
+                              className="text-cyan-400 hover:text-cyan-500 mt-2"
+                            >
+                              + Add Option
+                            </button>
+                          </div>
+                          
+                          <div className="flex justify-between pt-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setQuestionText('');
+                                setOptions([{ text: '', isCorrect: false }]);
+                                setEditingQuestion(null);
+                              }}
+                              className="text-gray-200 hover:underline"
+                            >
+                              {editingQuestion ? 'Cancel' : 'Clear'}
+                            </button>
+                            
+                            <button
+                              type="submit"
+                              className="bg-cyan-400 text-slate-900 px-6 py-2 rounded-md font-semibold hover:bg-cyan-500 transition transform hover:scale-105"
+                            >
+                              {editingQuestion ? 'Update Question' : 'Add Question'}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+                    
+                    <h4 className="text-lg font-semibold mb-4 text-cyan-400">Question List</h4>
+                    
+                    {questions.length > 0 ? (
+                      <div className="space-y-4">
+                        {questions.map(q => (
+                          <div key={q.id} className="border border-gray-600/30 rounded-md p-4">
+                            <div className="flex justify-between">
+                              <h5 className="font-medium">{q.text}</h5>
+                              
+                              {!quizzes.find(quiz => quiz.id === selectedQuizId)?.published && (
+                                <div>
+                                  <button
+                                    onClick={() => startEditingQuestion(q)}
+                                    className="text-cyan-400 hover:underline mr-3"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteQuestion(q.id)}
+                                    className="text-red-400 hover:underline"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <ul className="mt-2 ml-5 list-disc">
+                              {q.answers?.map((a: Answer) => (
+                                <li key={a.id} className={a.isCorrect ? 'text-lime-400 font-medium' : 'text-gray-200'}>
+                                  {a.text} {a.isCorrect && '✓'}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-gray-400 text-center py-8">
+                        <p>No questions added to this quiz yet.</p>
+                        {!quizzes.find(quiz => quiz.id === selectedQuizId)?.published && (
+                          <p className="mt-2">Use the form above to add questions.</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-gray-400 text-center py-10">
+                  <p>Please select a quiz to manage questions.</p>
+                  <button 
+                    onClick={() => setActiveNav('create')}
+                    className="mt-4 bg-cyan-400/20 text-cyan-400 px-4 py-2 rounded-md hover:bg-cyan-400/30 transition"
+                  >
+                    Create a New Quiz
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Profile Tab Content */}
+          {activeNav === 'profile' && (
+            <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20">
+              <h3 className="text-xl font-semibold mb-6">Your Profile</h3>
+              
+              <div className="max-w-md mx-auto">
+                <div className="flex flex-col items-center mb-6">
+                  {user?.profileImage ? (
+                    <img 
+                      src={`${BACKEND}${user.profileImage}`}
+                      alt={user.name}
+                      className="w-24 h-24 rounded-full object-cover border-2 border-cyan-400 mb-4"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/96';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-fuchsia-500/20 border-2 border-cyan-400 flex items-center justify-center font-bold text-3xl mb-4">
+                      {user?.name?.charAt(0).toUpperCase() || '?'}
+                    </div>
+                  )}
+                  
+                  <h4 className="text-xl font-medium">{user?.name}</h4>
+                  <p className="text-gray-400">{user?.email}</p>
+                  <p className="bg-fuchsia-500/20 text-fuchsia-500 px-3 py-1 rounded-full text-sm mt-2">
+                    {user?.role || 'MODERATOR'}
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-400">Username</label>
+                    <input 
+                      type="text"
+                      value={user?.name || ''}
+                      disabled
+                      className="bg-[#3A3A55] w-full text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-400">Email</label>
+                    <input 
+                      type="email"
+                      value={user?.email || ''}
+                      disabled
+                      className="bg-[#3A3A55] w-full text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-400">Role</label>
+                    <input 
+                      type="text"
+                      value={user?.role || ''}
+                      disabled
+                      className="bg-[#3A3A55] w-full text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20"
+                    />
+                  </div>
+                  
+                  <div className="mt-4">
+                    <Link 
+                      href="/profile/edit" 
+                      className="bg-cyan-400 text-slate-900 px-6 py-2 rounded-md font-semibold hover:bg-cyan-500 transition transform hover:scale-105 inline-block"
+                    >
+                      Edit Profile
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
