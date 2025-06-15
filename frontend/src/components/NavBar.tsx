@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation'; // Add this import
 
 type User = {
   id: string;
@@ -15,8 +16,14 @@ type User = {
 export default function NavBar() {
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const pathname = usePathname(); // Get current path
   
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+  // Don't render the navbar on dashboard pages
+  if (pathname?.includes('/dashboard')) {
+    return null;
+  }
 
   useEffect(() => {
     try {
