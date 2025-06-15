@@ -600,7 +600,7 @@ export default function ModeratorDashboardClient() {
                       <p className="text-sm text-gray-400 mt-1">{quiz.description || 'No description'}</p>
                       <div className="flex justify-between items-center mt-3">
                         <span className="text-xs bg-cyan-400/20 text-cyan-400 px-2 py-1 rounded">
-                          {quiz.questions?.length || 0} questions
+                          {quiz.questions?.length ?? 0} questions
                         </span>
                       </div>
                     </div>
@@ -665,7 +665,7 @@ export default function ModeratorDashboardClient() {
                             <h4 className="text-lg font-semibold">{quiz.title}</h4>
                             <p className="text-gray-400">{quiz.description || 'No description'}</p>
                             <p className="text-sm text-gray-500 mt-1">
-                              Questions: {quiz.questions?.length || 0}
+                              Questions: {quiz.questions?.length ?? 0}
                               {quiz.published && (
                                 <span className="ml-2 text-lime-400">• Published</span>
                               )}
