@@ -64,7 +64,7 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
         quizData.questions = randomizedQuestions;
         
         setQuiz(quizData);
-        setTimeRemaining(quizData.questions.length * 20); // 20 seconds per question
+        setTimeRemaining(quizData.questions.length * 10); // 10 seconds per question
         setIsLoading(false);
         
         // Start countdown
