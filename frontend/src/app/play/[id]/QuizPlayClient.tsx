@@ -325,7 +325,13 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
           </div>
           
           {timeRemaining !== null && (
-            <div className={`flex items-center ${timeRemaining < 30 ? 'text-red-400' : 'text-gray-300'}`}>
+            <div className={`flex items-center ${
+              timeRemaining < 10 
+                ? 'text-red-400 animate-pulse font-bold' 
+                : timeRemaining < 30 
+                  ? 'text-amber-400' 
+                  : 'text-gray-300'
+            }`}>
               <Clock size={18} className="mr-1" />
               <span>{formatTime(timeRemaining)}</span>
             </div>
