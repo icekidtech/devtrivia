@@ -9,16 +9,17 @@ datasource db {
 }
 
 model Quiz {
-  id          String     @id @default(cuid())
-  title       String
-  description String?
-  published   Boolean    @default(false)
-  joinCode    String?    @unique
-  createdAt   DateTime   @default(now())
-  questions   Question[]
-  ownerId     String
-  owner       User       @relation(fields: [ownerId], references: [id])
-  results     Result[]
+  id              String     @id @default(cuid())
+  title           String
+  description     String?
+  published       Boolean    @default(false)
+  joinCode        String?    @unique
+  createdAt       DateTime   @default(now())
+  questions       Question[]
+  ownerId         String
+  owner           User       @relation(fields: [ownerId], references: [id])
+  results         Result[]
+  timePerQuestion Int        @default(20) // Default to 20 seconds
 }
 
 model User {
