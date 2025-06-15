@@ -26,8 +26,11 @@ export class AuthController {
         },
       });
 
-      // Generate a JWT token for the user
-      const token = this.jwtService.sign({ id: user.id, role: user.role });
+      // Generate a JWT token for the user with expiration
+      const token = this.jwtService.sign(
+        { id: user.id, role: user.role },
+        { expiresIn: '24h' }  // Add 24 hour expiration
+      );
       return { user, token };
     } catch (error) {
       if (error.code === 'P2002') {
@@ -60,11 +63,11 @@ export class AuthController {
       throw new UnauthorizedException('Invalid password');
     }
 
-    // Generate JWT token
-    const token = this.jwtService.sign({ 
-      id: user.id, 
-      role: user.role 
-    });
+    // Generate JWT token with expiration
+    const token = this.jwtService.sign(
+      { id: user.id, role: user.role },
+      { expiresIn: '24h' }  // Add 24 hour expiration
+    );
     
     // Return user info and token
     return { 
