@@ -42,4 +42,5 @@ export interface Option {
 export interface LeaderboardEntry {
   userName: string;
   score: number;
+  date: string; // or Date if you're storing actual Date objects
 }
