@@ -697,7 +697,7 @@ export default function ModeratorDashboardClient() {
                               <button
                                 onClick={() => handlePublishQuiz(quiz.id)}
                                 className="bg-cyan-400 text-slate-900 px-4 py-2 rounded-md font-semibold hover:bg-cyan-500 transition"
-                                disabled={quiz.questions?.length < 1}
+                                disabled={!quiz.questions?.length}
                               >
                                 Publish Quiz
                               </button>
