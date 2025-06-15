@@ -85,7 +85,7 @@ export default function UserDashboardClient() {
     window.location.href = '/login';
   };
 
-  const handleJoinQuiz = (e: React.FormEvent) => {
+  const handleJoinQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
     setJoinError('');
     setJoinSuccess('');
@@ -95,11 +95,25 @@ export default function UserDashboardClient() {
       return;
     }
     
-    // Simulating join quiz functionality
-    setJoinSuccess(`Successfully joined quiz with code ${joinCode}!`);
-    setTimeout(() => {
-      router.push(`/play/${joinCode}`);
-    }, 1500);
+    try {
+      // Fetch the quiz by join code
+      const res = await fetch(`${BACKEND}/quizzes/join/${joinCode}`);
+      
+      if (!res.ok) {
+        throw new Error('Invalid join code or quiz not found');
+      }
+      
+      const quiz = await res.json();
+      setJoinSuccess(`Successfully joined quiz: ${quiz.title}!`);
+      
+      // Navigate using the actual quiz ID
+      setTimeout(() => {
+        router.push(`/play/${quiz.id}`);
+      }, 1500);
+      
+    } catch (err) {
+      setJoinError(err instanceof Error ? err.message : 'Failed to join quiz');
+    }
   };
 
   if (loading) {
