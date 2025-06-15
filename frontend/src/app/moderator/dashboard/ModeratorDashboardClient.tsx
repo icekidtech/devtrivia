@@ -39,7 +39,7 @@ export default function ModeratorDashboardClient() {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [showQuestionEditor, setShowQuestionEditor] = useState(false);
 
-  const [timePerQuestion, setTimePerQuestion] = useState(30);
+  const [timePerQuestion, setTimePerQuestion] = useState(20);
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
