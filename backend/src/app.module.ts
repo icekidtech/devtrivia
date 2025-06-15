@@ -13,6 +13,7 @@ import { AnswerController } from './answers/answer.controller';
 import { AnswerService } from './answers/answer.service';
 import { AuthController } from './auth/auth.controller';
 import { AdminController } from './admin/admin.controller';
+import { ResultsModule } from './results/results.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AdminController } from './admin/admin.controller';
         signOptions: { expiresIn: `${configService.get<string>('JWT_EXPIRES_IN')}s` },
       }),
     }),
+    ResultsModule,
   ],
   controllers: [
     AppController,
