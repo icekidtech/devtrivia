@@ -39,6 +39,8 @@ export default function ModeratorDashboardClient() {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [showQuestionEditor, setShowQuestionEditor] = useState(false);
 
+  const [timePerQuestion, setTimePerQuestion] = useState(30);
+
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (stored) {
@@ -126,7 +128,8 @@ export default function ModeratorDashboardClient() {
         body: JSON.stringify({ 
           title, 
           description, 
-          ownerName: user.name
+          ownerName: user.name,
+          timePerQuestion
         }),
       });
       
@@ -140,6 +143,7 @@ export default function ModeratorDashboardClient() {
       setQuizzes([...quizzes, newQuiz]);
       setTitle('');
       setDescription('');
+      setTimePerQuestion(30);
     } catch (err) {
       setError('An error occurred while creating the quiz.');
     }
@@ -636,6 +640,27 @@ export default function ModeratorDashboardClient() {
                     onChange={e => setDescription(e.target.value)}
                     className="bg-[#3A3A55] w-full text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400 min-h-[100px]"
                   ></textarea>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-400">Time Per Question (seconds)</label>
+                  <div className="flex items-center">
+                    <input
+                      type="range"
+                      min="5"
+                      max="120"
+                      step="5"
+                      value={timePerQuestion}
+                      onChange={e => setTimePerQuestion(parseInt(e.target.value))}
+                      className="w-full mr-3"
+                    />
+                    <span className="text-cyan-400 font-mono w-12">{timePerQuestion}s</span>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {timePerQuestion < 15 ? "Fast-paced" : 
+                     timePerQuestion < 30 ? "Standard" : 
+                     timePerQuestion < 60 ? "Complex questions" : "Technical deep-dive"}
+                  </p>
                 </div>
                 
                 <div>
