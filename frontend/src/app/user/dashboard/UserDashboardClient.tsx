@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { User, Quiz } from '@/types';
 import { 
   Search, 
@@ -19,6 +20,7 @@ import {
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export default function UserDashboardClient() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [pastQuizzes, setPastQuizzes] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -96,7 +98,7 @@ export default function UserDashboardClient() {
     // Simulating join quiz functionality
     setJoinSuccess(`Successfully joined quiz with code ${joinCode}!`);
     setTimeout(() => {
-      window.location.href = `/quiz/${joinCode}`;
+      router.push(`/play/${joinCode}`);
     }, 1500);
   };
 
