@@ -13,6 +13,7 @@ import { AnswerController } from './answers/answer.controller';
 import { AnswerService } from './answers/answer.service';
 import { AuthController } from './auth/auth.controller';
 import { AdminController } from './admin/admin.controller';
+import { PrismaModule } from './prisma/prisma.module';
 import { ResultsModule } from './results/results.module';
 
 @Module({
@@ -26,6 +27,7 @@ import { ResultsModule } from './results/results.module';
         signOptions: { expiresIn: `${configService.get<string>('JWT_EXPIRES_IN')}s` },
       }),
     }),
+    PrismaModule,
     ResultsModule,
   ],
   controllers: [
