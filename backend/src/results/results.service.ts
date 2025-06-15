@@ -1,6 +1,34 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
+type ResultWithRelations = {
+  id: string;
+  userId: string;
+  quizId: string;
+  score: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  answersJson: string;
+  createdAt: Date;
+  // Add relations
+  user: { id: string; name: string };
+  quiz: { 
+    id: string; 
+    title: string;
+    questions: Array<{
+      id: string;
+      text: string;
+      quizId: string;
+      answers: Array<{
+        id: string;
+        text: string;
+        questionId: string;
+        isCorrect: boolean;
+      }>;
+    }>;
+  };
+};
+
 @Injectable()
 export class ResultsService {
   constructor(private prisma: PrismaService) {}
@@ -51,7 +79,7 @@ export class ResultsService {
           },
         },
       },
-    });
+    }) as unknown as ResultWithRelations;
 
     if (!result) {
       throw new NotFoundException('Result not found');
