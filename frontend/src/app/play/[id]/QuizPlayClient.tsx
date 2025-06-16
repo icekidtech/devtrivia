@@ -216,7 +216,7 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
   };
   
   // Current question
-  const currentQuestion = quiz?.questions[currentQuestionIndex];
+  const currentQuestion = quiz?.questions?.[currentQuestionIndex];
   
   // Add this safety check at the start of your render function
   if (!quiz || !quiz.questions) {
