@@ -10,6 +10,14 @@ export class QuizSessionController {
     return this.quizSessionService.getParticipants(id);
   }
 
+  @Post(':id/participants')
+  async addParticipant(
+    @Param('id') id: string,
+    @Body() data: { userId: string; name: string },
+  ) {
+    return this.quizSessionService.addParticipant(id, data.userId, data.name);
+  }
+
   @Patch(':id/start')
   async startQuiz(@Param('id') id: string) {
     return this.quizSessionService.startQuiz(id);
@@ -31,5 +39,10 @@ export class QuizSessionController {
   @Get(':id/leaderboard')
   async getLeaderboard(@Param('id') id: string) {
     return this.quizSessionService.getLeaderboard(id);
+  }
+
+  @Get(':id/status')
+  async getQuizStatus(@Param('id') id: string) {
+    return this.quizSessionService.getQuizStatus(id);
   }
 }
