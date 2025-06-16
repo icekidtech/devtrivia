@@ -117,7 +117,7 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
         if (!prev || prev <= 1) {
           clearInterval(timer);
           // Auto-submit current answer when time expires
-          if (!selectedAnswers[currentQuestion?.id]) {
+          if (!selectedAnswers[currentQuestion?.id] && currentQuestion) {
             // Handle time expiring without an answer
             console.log("Time expired for question");
           }
