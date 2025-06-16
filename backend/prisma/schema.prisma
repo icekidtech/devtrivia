@@ -13,15 +13,14 @@ model Quiz {
   title           String
   description     String?
   published       Boolean    @default(false)
-  joinCode        String?    @unique
-  createdAt       DateTime   @default(now())
-  questions       Question[]
-  ownerId         String
-  owner           User       @relation(fields: [ownerId], references: [id])
-  results         Result[]
-  timePerQuestion Int        @default(20) // Default to 20 seconds
   active              Boolean @default(false)
   currentQuestionIndex Int     @default(0)
+  joinCode        String?    @unique
+  createdAt       DateTime   @default(now())
+  ownerId         String
+  owner           User       @relation(fields: [ownerId], references: [id])
+  questions       Question[]
+  results         Result[]
   participants        QuizParticipant[]
 }
 
@@ -77,7 +76,7 @@ model QuizParticipant {
   name     String
   joinedAt DateTime @default(now())
   quiz     Quiz     @relation(fields: [quizId], references: [id])
-  
+
   @@unique([quizId, userId])
 }
 
