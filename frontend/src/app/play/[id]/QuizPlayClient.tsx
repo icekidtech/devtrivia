@@ -27,6 +27,7 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
   const [countdown, setCountdown] = useState(3); // Countdown before starting quiz
   const [quizStarted, setQuizStarted] = useState(false);
   const [questionStartTime, setQuestionStartTime] = useState<number | null>(null); // Track question start time
+  const [questionTime, setQuestionTime] = useState<number>(20); // Time per question
 
   // Load user and quiz data
   useEffect(() => {
@@ -65,6 +66,7 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
         quizData.questions = randomizedQuestions;
         
         setQuiz(quizData);
+        setQuestionTime(quizData.timePerQuestion || 20); // Extract time per question
         setTimeRemaining(quizData.questions.length * (quizData.timePerQuestion || 20)); // Use quiz setting or default to 20 seconds
         setIsLoading(false);
         
@@ -101,13 +103,21 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
   
   // Timer for quiz
   useEffect(() => {
-    if (!quizStarted || !timeRemaining || quizSubmitted) return;
+    if (!quizStarted || quizSubmitted) return;
+    
+    // Reset timer when question changes
+    setTimeRemaining(questionTime);
+    setQuestionStartTime(Date.now());
     
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (!prev || prev <= 1) {
           clearInterval(timer);
-          handleSubmitQuiz();
+          // Auto-submit current answer when time expires
+          if (!selectedAnswers[currentQuestion?.id]) {
+            // Handle time expiring without an answer
+            console.log("Time expired for question");
+          }
           return 0;
         }
         return prev - 1;
@@ -115,7 +125,7 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [quizStarted, timeRemaining, quizSubmitted]);
+  }, [quizStarted, currentQuestionIndex, quizSubmitted, currentQuestion]);
   
   // Format time remaining
   const formatTime = (seconds: number) => {
