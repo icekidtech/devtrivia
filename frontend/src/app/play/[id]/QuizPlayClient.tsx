@@ -191,6 +191,15 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
       
       const score = Math.round((correctCount / questionCount) * 100);
       
+      // Calculate average time spent per question
+      const timeSpentValues = Object.keys(selectedAnswers)
+        .filter(key => key.includes('_time'))
+        .map(key => selectedAnswers[key]);
+
+      const averageTimeSpent = timeSpentValues.length > 0 
+        ? timeSpentValues.reduce((sum, time) => sum + Number(time), 0) / timeSpentValues.length 
+        : 20000;
+      
       // Submit result to backend
       const resultResponse = await fetch(`${BACKEND}/results`, {
         method: 'POST',
@@ -201,7 +210,7 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
           score,
           totalQuestions: questionCount,
           correctAnswers: correctCount,
-          timeSpent: selectedAnswers[`${currentQuestion.id}_time`] || 20000, // Make sure this is included
+          timeSpent: averageTimeSpent, // Average time spent across all questions
           answers: selectedAnswers
         }),
       });
