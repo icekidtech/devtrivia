@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import QuizPlayClient from './QuizPlayClient';
 
 export const metadata = {
@@ -6,5 +7,9 @@ export const metadata = {
 };
 
 export default function QuizPlayPage({ params }: { params: { id: string } }) {
-  return <QuizPlayClient quizId={params.id} />;
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen bg-slate-900 text-cyan-400">Loading quiz...</div>}>
+      <QuizPlayClient quizId={params.id} />
+    </Suspense>
+  );
 }
