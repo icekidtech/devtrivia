@@ -60,9 +60,10 @@ model Result {
   userId          String
   quizId          String
   score           Int
-  totalQuestions  Int      // Make sure this exists
-  correctAnswers  Int      // Make sure this exists
-  answersJson     String?  // Make sure this exists
+  totalQuestions  Int
+  correctAnswers  Int
+  timeSpent       Int      // Add this field to track time taken in milliseconds
+  answersJson     String?
   createdAt       DateTime @default(now())
   
   user            User     @relation(fields: [userId], references: [id])
