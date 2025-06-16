@@ -26,8 +26,11 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
   } | null>(null);
   const [countdown, setCountdown] = useState(3); // Countdown before starting quiz
   const [quizStarted, setQuizStarted] = useState(false);
-  const [questionStartTime, setQuestionStartTime] = useState<number | null>(null); // Track question start time
-  const [questionTime, setQuestionTime] = useState<number>(20); // Time per question
+  const [questionStartTime, setQuestionStartTime] = useState<number | null>(null);
+  const [questionTime, setQuestionTime] = useState<number>(20);
+
+  // Move this declaration up here before it's used in any useEffect
+  const currentQuestion = quiz?.questions?.[currentQuestionIndex];
 
   // Load user and quiz data
   useEffect(() => {
@@ -233,9 +236,6 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
       setError(err instanceof Error ? err.message : 'Failed to submit quiz results');
     }
   };
-  
-  // Current question
-  const currentQuestion = quiz?.questions?.[currentQuestionIndex];
   
   // Add this safety check at the start of your render function
   if (!quiz || !quiz.questions) {
