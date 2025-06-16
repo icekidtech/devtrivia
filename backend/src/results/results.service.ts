@@ -33,20 +33,40 @@ type ResultWithRelations = {
 export class ResultsService {
   constructor(private prisma: PrismaService) {}
 
+  // Update createResult method
   async createResult(data: {
     userId: string;
     quizId: string;
     score: number;
     totalQuestions: number;
     correctAnswers: number;
+    timeSpent: number; // Time in ms taken to answer
     answers: Record<string, string>;
   }) {
+    // Calculate time-based bonus points (faster answers get more points)
+    // Maximum 10 points for speed, plus 10 points for correctness
+    let timeBonus = 0;
+    if (data.timeSpent < 3000) { // Less than 3 seconds
+      timeBonus = 10;
+    } else if (data.timeSpent < 5000) { // Less than 5 seconds
+      timeBonus = 8;
+    } else if (data.timeSpent < 10000) { // Less than 10 seconds
+      timeBonus = 5;
+    } else if (data.timeSpent < 15000) { // Less than 15 seconds
+      timeBonus = 3;
+    } else { // 15 seconds or more
+      timeBonus = 1;
+    }
+    
+    // Base score + time bonus (max 20 points per question)
+    const totalScore = data.score + timeBonus;
+
     // Create the result
     const result = await this.prisma.result.create({
       data: {
         userId: data.userId,
         quizId: data.quizId,
-        score: data.score,
+        score: totalScore,
         totalQuestions: data.totalQuestions,
         correctAnswers: data.correctAnswers,
         // Store answers as JSON string
