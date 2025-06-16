@@ -188,10 +188,10 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
         body: JSON.stringify({
           userId: user.id,
           quizId: quiz.id,
-          score: score,
+          score,
           totalQuestions: questionCount,
           correctAnswers: correctCount,
-          timeSpent: selectedAnswers[`${currentQuestion.id}_time`] || 20000, // Default to max time
+          timeSpent: selectedAnswers[`${currentQuestion.id}_time`] || 20000, // Make sure this is included
           answers: selectedAnswers
         }),
       });
