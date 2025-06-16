@@ -106,9 +106,9 @@ export default function UserDashboardClient() {
       const quiz = await res.json();
       setJoinSuccess(`Successfully joined quiz: ${quiz.title}!`);
       
-      // Navigate using the actual quiz ID
+      // Navigate to waiting room instead of directly to quiz
       setTimeout(() => {
-        router.push(`/play/${quiz.id}`);
+        router.push(`/play/${quiz.id}/waiting`);
       }, 1500);
       
     } catch (err) {
