@@ -20,6 +20,9 @@ model Quiz {
   owner           User       @relation(fields: [ownerId], references: [id])
   results         Result[]
   timePerQuestion Int        @default(20) // Default to 20 seconds
+  active              Boolean @default(false)
+  currentQuestionIndex Int     @default(0)
+  participants        QuizParticipant[]
 }
 
 model User {
@@ -65,6 +68,17 @@ model Result {
   
   user            User     @relation(fields: [userId], references: [id])
   quiz            Quiz     @relation(fields: [quizId], references: [id])
+}
+
+model QuizParticipant {
+  id       String   @id @default(uuid())
+  quizId   String
+  userId   String
+  name     String
+  joinedAt DateTime @default(now())
+  quiz     Quiz     @relation(fields: [quizId], references: [id])
+  
+  @@unique([quizId, userId])
 }
 
 enum Role {
