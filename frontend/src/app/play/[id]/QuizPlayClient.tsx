@@ -204,6 +204,15 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
   // Current question
   const currentQuestion = quiz?.questions[currentQuestionIndex];
   
+  // Add this safety check at the start of your render function
+  if (!quiz || !quiz.questions) {
+    return (
+      <div className="flex items-center justify-center h-screen w-full bg-slate-900">
+        <div className="animate-pulse text-cyan-400 text-2xl">Loading quiz data...</div>
+      </div>
+    );
+  }
+  
   // Show loading state
   if (isLoading) {
     return (
