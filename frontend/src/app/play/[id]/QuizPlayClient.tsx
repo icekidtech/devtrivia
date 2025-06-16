@@ -26,6 +26,7 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
   } | null>(null);
   const [countdown, setCountdown] = useState(3); // Countdown before starting quiz
   const [quizStarted, setQuizStarted] = useState(false);
+  const [questionStartTime, setQuestionStartTime] = useState<number | null>(null); // Track question start time
 
   // Load user and quiz data
   useEffect(() => {
@@ -131,6 +132,18 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
     });
   };
   
+  // Update answer selection logic to record time spent
+  const handleAnswerSelect = (questionId: string, answerId: string) => {
+    if (!questionStartTime) return;
+    
+    const timeSpent = Date.now() - questionStartTime;
+    setSelectedAnswers(prev => ({
+      ...prev,
+      [questionId]: answerId,
+      [`${questionId}_time`]: timeSpent // Store time spent
+    }));
+  };
+  
   // Navigate to next question
   const handleNextQuestion = () => {
     if (quiz && currentQuestionIndex < quiz.questions.length - 1) {
@@ -178,6 +191,7 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
           score: score,
           totalQuestions: questionCount,
           correctAnswers: correctCount,
+          timeSpent: selectedAnswers[`${currentQuestion.id}_time`] || 20000, // Default to max time
           answers: selectedAnswers
         }),
       });
