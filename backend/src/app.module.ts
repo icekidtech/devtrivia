@@ -15,6 +15,7 @@ import { AuthController } from './auth/auth.controller';
 import { AdminController } from './admin/admin.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { ResultsModule } from './results/results.module';
+import { QuizSessionsModule } from './quiz-sessions/quiz-sessions.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ResultsModule } from './results/results.module';
     }),
     PrismaModule,
     ResultsModule,
+    QuizSessionsModule,
   ],
   controllers: [
     AppController,
