@@ -390,7 +390,7 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
               <h3 className="text-xl font-semibold mb-6">{currentQuestion.text}</h3>
               
               <div className="space-y-3">
-                {currentQuestion.answers.map((answer) => (
+                {(currentQuestion.answers || []).map((answer) => (
                   <button
                     key={answer.id}
                     onClick={() => handleSelectAnswer(currentQuestion.id, answer.id)}
@@ -403,6 +403,11 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
                     {answer.text}
                   </button>
                 ))}
+                {(!currentQuestion.answers || currentQuestion.answers.length === 0) && (
+                  <div className="text-center p-4 bg-red-500/20 border border-red-500 rounded-md text-red-300">
+                    No answer options available for this question.
+                  </div>
+                )}
               </div>
             </div>
           )}
