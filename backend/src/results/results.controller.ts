@@ -13,6 +13,7 @@ export class ResultsController {
     totalQuestions: number;
     correctAnswers: number;
     answers: Record<string, string>;
+    timeSpent: number;  // Make sure this field is included in the DTO
   }) {
     return await this.resultsService.createResult(data);
   }

@@ -69,6 +69,7 @@ export class ResultsService {
         score: totalScore,
         totalQuestions: data.totalQuestions,
         correctAnswers: data.correctAnswers,
+        timeSpent: data.timeSpent,  // Add this missing field
         // Store answers as JSON string
         answersJson: JSON.stringify(data.answers)
       },
