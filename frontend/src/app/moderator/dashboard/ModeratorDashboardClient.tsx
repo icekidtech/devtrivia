@@ -14,7 +14,8 @@ import {
   List,
   CheckCircle,
   ChevronDown,
-  Award
+  Award,
+  Play
 } from 'lucide-react';
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -606,6 +607,13 @@ export default function ModeratorDashboardClient() {
                         <span className="text-xs bg-cyan-400/20 text-cyan-400 px-2 py-1 rounded">
                           {quiz.questions?.length ?? 0} questions
                         </span>
+                        <Link 
+                          href={`/moderate/${quiz.id}/waiting`}
+                          className="px-4 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded flex items-center gap-1"
+                        >
+                          <Play size={16} />
+                          Start Session
+                        </Link>
                       </div>
                     </div>
                   ))}
