@@ -20,6 +20,15 @@ import {
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;
 
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+}
+
 export default function ModeratorDashboardClient() {
   const [user, setUser] = useState<User | null>(null);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -98,6 +107,17 @@ export default function ModeratorDashboardClient() {
         });
     }
   }, [selectedQuizId]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      const user = JSON.parse(stored);
+      if (!user.token || isTokenExpired(user.token)) {
+        localStorage.removeItem('user');
+        window.location.href = '/login?expired=1';
+      }
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('user');

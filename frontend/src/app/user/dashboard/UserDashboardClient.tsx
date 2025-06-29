@@ -116,6 +116,28 @@ export default function UserDashboardClient() {
     }
   };
 
+  // Add this utility function
+  function isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp * 1000 < Date.now();
+    } catch {
+      return true;
+    }
+  }
+
+  // In your main layout or useEffect in dashboard/profile pages:
+  useEffect(() => {
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      const user = JSON.parse(stored);
+      if (!user.token || isTokenExpired(user.token)) {
+        localStorage.removeItem('user');
+        window.location.href = '/login?expired=1';
+      }
+    }
+  }, []);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen w-full bg-slate-900">
