@@ -1,5 +1,6 @@
 import WaitingRoomClient from './WaitingRoomClient';
 
-export default function WaitingRoomPage({ params }: { params: { id: string } }) {
+export default async function WaitingRoomPage({ params }: { params: { id: string } }) {
+  await params; // Ensure params is awaited
   return <WaitingRoomClient quizId={params.id} />;
 }
