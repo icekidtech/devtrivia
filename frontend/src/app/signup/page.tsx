@@ -169,7 +169,6 @@ export default function SignupPage() {
                 >
                   <option value="USER">User</option>
                   <option value="MODERATOR">Moderator</option>
-                  <option value="ADMIN">Administrator</option>
                 </select>
                 <label>Role</label>
               </div>
