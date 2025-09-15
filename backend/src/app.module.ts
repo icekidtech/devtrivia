@@ -16,6 +16,8 @@ import { AdminController } from './admin/admin.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { ResultsModule } from './results/results.module';
 import { QuizSessionsModule } from './quiz-sessions/quiz-sessions.module';
+import { UserModule } from './users/user.module';
+import { AdminInitService } from './admin/admin-init.service';
 
 @Module({
   imports: [
@@ -31,6 +33,7 @@ import { QuizSessionsModule } from './quiz-sessions/quiz-sessions.module';
     PrismaModule,
     ResultsModule,
     QuizSessionsModule,
+    UserModule,
   ],
   controllers: [
     AppController,
@@ -47,6 +50,7 @@ import { QuizSessionsModule } from './quiz-sessions/quiz-sessions.module';
     QuizService,
     QuestionService,
     AnswerService,
+    AdminInitService,
   ],
 })
 export class AppModule {}
