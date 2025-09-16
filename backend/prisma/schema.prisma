@@ -9,19 +9,19 @@ datasource db {
 }
 
 model Quiz {
-  id              String     @id @default(cuid())
-  title           String
-  description     String?
-  published       Boolean    @default(false)
-  active              Boolean @default(false)
-  currentQuestionIndex Int     @default(0)
-  joinCode        String?    @unique
-  createdAt       DateTime   @default(now())
-  ownerId         String
-  owner           User       @relation(fields: [ownerId], references: [id])
-  questions       Question[]
-  results         Result[]
-  participants        QuizParticipant[]
+  id                   String            @id @default(cuid())
+  title                String
+  description          String?
+  published            Boolean           @default(false)
+  active               Boolean           @default(false)
+  currentQuestionIndex Int               @default(0)
+  joinCode             String?           @unique
+  createdAt            DateTime          @default(now())
+  ownerId              String
+  questions            Question[]
+  owner                User              @relation(fields: [ownerId], references: [id])
+  participants         QuizParticipant[]
+  results              Result[]
 }
 
 model User {
@@ -30,7 +30,7 @@ model User {
   name         String?  @unique
   password     String
   role         Role     @default(USER)
-  profileImage String?  // Add this field
+  profileImage String?
   createdAt    DateTime @default(now())
   quizzes      Quiz[]
   results      Result[]
@@ -40,34 +40,33 @@ model Question {
   id        String   @id @default(cuid())
   text      String
   quizId    String
-  quiz      Quiz     @relation(fields: [quizId], references: [id])
-  answers   Answer[]
   correctId String?
+  answers   Answer[]
+  quiz      Quiz     @relation(fields: [quizId], references: [id])
 
-  @@unique([text, quizId]) // Add a unique constraint
+  @@unique([text, quizId])
 }
 
 model Answer {
   id         String   @id @default(cuid())
   text       String
   questionId String
-  question   Question @relation(fields: [questionId], references: [id])
   isCorrect  Boolean  @default(false)
+  question   Question @relation(fields: [questionId], references: [id])
 }
 
 model Result {
-  id              String   @id @default(uuid())
-  userId          String
-  quizId          String
-  score           Int
-  totalQuestions  Int
-  correctAnswers  Int
-  timeSpent       Int      // Add this field to track time taken in milliseconds
-  answersJson     String?
-  createdAt       DateTime @default(now())
-  
-  user            User     @relation(fields: [userId], references: [id])
-  quiz            Quiz     @relation(fields: [quizId], references: [id])
+  id             String   @id @default(uuid())
+  userId         String
+  quizId         String
+  score          Int
+  totalQuestions Int
+  correctAnswers Int
+  timeSpent      Int
+  answersJson    String?
+  createdAt      DateTime @default(now())
+  quiz           Quiz     @relation(fields: [quizId], references: [id])
+  user           User     @relation(fields: [userId], references: [id])
 }
 
 model QuizParticipant {
