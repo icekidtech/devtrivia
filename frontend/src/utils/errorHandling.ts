@@ -1,29 +1,40 @@
 /**
  * Consistently handle API errors and produce user-friendly messages
  */
-export const handleApiError = (error: unknown, defaultMessage: string): string => {
+export const handleApiError = (error: unknown): string => {
   // If it's an Error object
   if (error instanceof Error) {
-    console.error(`${defaultMessage}: ${error.message}`, error);
+    console.error(`Error: ${error.message}`, error);
     return error.message;
   }
   
   // If it's a string
   if (typeof error === 'string') {
-    console.error(`${defaultMessage}: ${error}`);
+    console.error(`Error: ${error}`);
     return error;
   }
   
   // If it's something else (object with message, etc)
   if (error && typeof error === 'object' && 'message' in error) {
     const msg = String(error.message);
-    console.error(`${defaultMessage}: ${msg}`, error);
+    console.error(`Error: ${msg}`, error);
     return msg;
   }
   
   // Default case - unknown error type
-  console.error(defaultMessage, error);
-  return defaultMessage;
+  console.error('Unknown error', error);
+  return 'An unknown error occurred';
+};
+
+/**
+ * Log error details, optionally with context
+ */
+export const logError = (error: unknown, context?: string): void => {
+  if (context) {
+    console.error(`Error in ${context}:`, error);
+  } else {
+    console.error('Error:', error);
+  }
 };
 
 /**
