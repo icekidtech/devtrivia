@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Target, Heart, Lightbulb, Globe, Users } from "lucide-react";
+import { Heart, Lightbulb, Globe, Users } from "lucide-react";
 
 export default function About() {
   return (
@@ -11,7 +11,7 @@ export default function About() {
             About Us
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            DevTrivia is a revolutionary quiz platform inspired by Kahoot, designed for everyone who loves 
+            DevTrivia is a revolutionary quiz platform inspired by Kahoot, designed for everyone who loves
             learning and having fun. Built on Web3 technology for the next generation of interactive entertainment.
           </p>
         </div>
@@ -21,8 +21,8 @@ export default function About() {
           <Card className="bg-slate-800/50 border-slate-700 p-8">
             <h2 className="text-2xl font-bold text-white mb-4 text-center">Our Mission</h2>
             <p className="text-lg text-gray-300 text-center leading-relaxed">
-              Our mission is to create a global community where learning meets entertainment. Whether you're a 
-              student, teacher, trivia lover, or just someone who enjoys a good challenge, DevTrivia has something 
+              Our mission is to create a global community where learning meets entertainment. Whether you&apos;re a
+              student, teacher, trivia lover, or just someone who enjoys a good challenge, DevTrivia has something
               for everyone! We believe that learning should be interactive, social, and most importantly, fun.
             </p>
           </Card>
@@ -80,40 +80,39 @@ export default function About() {
             <h2 className="text-2xl font-bold text-white mb-6 text-center">Our Story</h2>
             <div className="space-y-4 text-gray-300">
               <p className="leading-relaxed">
-                DevTrivia was born from our love for Kahoot and the belief that learning should be as exciting as 
-                playing your favorite game. We saw the potential to create something even better - a platform that 
+                DevTrivia was born from our love for Kahoot and the belief that learning should be as exciting as
+                playing your favorite game. We saw the potential to create something even better - a platform that
                 combines the fun of Kahoot with the innovation of Web3 technology.
               </p>
               <p className="leading-relaxed">
-                We envisioned a platform where anyone could create, share, and play quizzes on topics they're passionate 
-                about. Whether it's testing your friends on movie trivia, helping students study for exams, or just 
-                having fun with random facts - DevTrivia makes it all possible.
-              </p>
-              <p className="leading-relaxed">
-                Today, DevTrivia serves thousands of quiz enthusiasts worldwide, from students and teachers to trivia 
-                lovers and casual players, all united by the joy of learning and friendly competition.
+                What started as a simple idea has grown into a comprehensive platform where millions of users can
+                create, share, and play quizzes on virtually any topic. We&apos;re not just building a game - we&apos;re
+                creating a new way for people to learn together.
               </p>
             </div>
           </Card>
         </div>
 
-        {/* Stats Section */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
-            <div className="text-3xl font-bold text-cyan-400 mb-2">50K+</div>
-            <div className="text-gray-300">Quiz Players</div>
-          </div>
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
-            <div className="text-3xl font-bold text-cyan-400 mb-2">100K+</div>
-            <div className="text-gray-300">Quiz Questions</div>
-          </div>
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
-            <div className="text-3xl font-bold text-cyan-400 mb-2">500+</div>
-            <div className="text-gray-300">Categories</div>
-          </div>
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
-            <div className="text-3xl font-bold text-cyan-400 mb-2">1M+</div>
-            <div className="text-gray-300">Games Played</div>
+        {/* Statistics Section */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-white text-center mb-12">DevTrivia by the Numbers</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
+              <div className="text-3xl font-bold text-cyan-400 mb-2">10K+</div>
+              <div className="text-gray-300">Active Users</div>
+            </div>
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
+              <div className="text-3xl font-bold text-cyan-400 mb-2">100K+</div>
+              <div className="text-gray-300">Quiz Questions</div>
+            </div>
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
+              <div className="text-3xl font-bold text-cyan-400 mb-2">500+</div>
+              <div className="text-gray-300">Categories</div>
+            </div>
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
+              <div className="text-3xl font-bold text-cyan-400 mb-2">1M+</div>
+              <div className="text-gray-300">Games Played</div>
+            </div>
           </div>
         </div>
       </div>
