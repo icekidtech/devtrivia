@@ -40,7 +40,7 @@ export default function Contact() {
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
             Have questions about DevTrivia? Need help with your quizzes? Or just want to share feedback? 
-            We'd love to hear from you!
+            We&apos;d love to hear from you!
           </p>
         </div>
 
@@ -201,7 +201,7 @@ export default function Contact() {
                 How do I join a quiz game?
               </h3>
               <p className="text-gray-300">
-                Simply enter the game PIN provided by the quiz host, choose your nickname, and you're ready to play!
+                Simply enter the game PIN provided by the quiz host, choose your nickname, and you&apos;re ready to play!
               </p>
             </Card>
 
