@@ -56,8 +56,20 @@ export default function NavBar() {
     }
   }, []);
 
-  // Don't render the navbar on dashboard pages
-  if (pathname?.includes('/dashboard')) {
+  // Don't render the navbar on dashboard pages, login, signup, or when user is logged in
+  const shouldHideNavbar = 
+    pathname?.includes('/dashboard') || 
+    pathname?.includes('/user/dashboard') ||
+    pathname?.includes('/moderator/dashboard') ||
+    pathname?.includes('/admin/dashboard') ||
+    pathname === '/login' ||
+    pathname === '/signup' ||
+    pathname?.includes('/play/') ||
+    pathname?.includes('/moderate/') ||
+    pathname?.includes('/results/') ||
+    (user !== null); // Hide navbar when user is logged in
+
+  if (shouldHideNavbar) {
     return null;
   }
 
