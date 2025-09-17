@@ -124,12 +124,12 @@ export default function UserDashboardClient() {
   };
 
   // Add this utility function
-  const getPerformanceColor = (score: number) => {
-    if (score >= 90) return 'text-lime-400';
-    if (score >= 70) return 'text-cyan-400';
-    if (score >= 50) return 'text-yellow-400';
-    return 'text-red-400';
-  };
+  //const getPerformanceColor = (score: number) => {
+  //  if (score >= 90) return 'text-lime-400';
+  //  if (score >= 70) return 'text-cyan-400';
+  //  if (score >= 50) return 'text-yellow-400';
+  //  return 'text-red-400';
+  //};
 
   if (loading) {
     return (
