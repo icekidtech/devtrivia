@@ -6,10 +6,23 @@ import { Clock, Users, Play } from 'lucide-react';
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;
 
+interface Quiz {
+  id: string;
+  title: string;
+  description: string;
+  joinCode?: string;
+}
+
+interface Participant {
+  id: string;
+  name: string;
+  joinedAt: string;
+}
+
 export default function WaitingRoomClient({ quizId }: { quizId: string }) {
   const router = useRouter();
-  const [quiz, setQuiz] = useState<any>(null);
-  const [participants, setParticipants] = useState<any[]>([]);
+  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -26,7 +39,7 @@ export default function WaitingRoomClient({ quizId }: { quizId: string }) {
         const quizData = await res.json();
         setQuiz(quizData);
         setLoading(false);
-      } catch (err) {
+      } catch {
         setError('Error loading quiz');
         setLoading(false);
       }
@@ -40,8 +53,8 @@ export default function WaitingRoomClient({ quizId }: { quizId: string }) {
           const data = await res.json();
           setParticipants(data);
         }
-      } catch (err) {
-        console.error('Error fetching participants:', err);
+      } catch {
+        console.error('Error fetching participants');
       }
     }, 2000);
     
@@ -60,7 +73,7 @@ export default function WaitingRoomClient({ quizId }: { quizId: string }) {
       
       // Navigate to moderator control panel
       router.push(`/moderate/${quizId}/control`);
-    } catch (err) {
+    } catch {
       setError('Failed to start quiz');
     }
   };
