@@ -5,6 +5,7 @@ export const metadata = {
   description: 'Review your quiz results and see detailed analytics.',
 };
 
-export default function QuizResultsPage({ params }: { params: { id: string } }) {
-  return <QuizResultsClient resultId={params.id} />;
+export default async function QuizResultsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return <QuizResultsClient resultId={id} />;
 }
