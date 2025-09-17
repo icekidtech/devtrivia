@@ -56,7 +56,7 @@ export default function NavBar() {
     }
   }, []);
 
-  // Don't render the navbar on dashboard pages, login, signup, or when user is logged in
+  // Don't render the navbar on dashboard pages, login, signup
   const shouldHideNavbar = 
     pathname?.includes('/dashboard') || 
     pathname?.includes('/user/dashboard') ||
@@ -66,8 +66,7 @@ export default function NavBar() {
     pathname === '/signup' ||
     pathname?.includes('/play/') ||
     pathname?.includes('/moderate/') ||
-    pathname?.includes('/results/') ||
-    (user !== null); // Hide navbar when user is logged in
+    pathname?.includes('/results/');
 
   if (shouldHideNavbar) {
     return null;
