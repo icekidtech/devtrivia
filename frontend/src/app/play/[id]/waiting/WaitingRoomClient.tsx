@@ -4,18 +4,22 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Clock, Users, AlertCircle } from 'lucide-react';
-import { User } from '@/types';
+import { User, Quiz } from '@/types';
+
+interface Participant {
+  userId: string;
+  name: string;
+}
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export default function WaitingRoomClient({ quizId }: { quizId: string }) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [quiz, setQuiz] = useState<any>(null);
-  const [participants, setParticipants] = useState<any[]>([]);
+  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [participants, setParticipants] = useState<Participant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [quizStarted, setQuizStarted] = useState(false);
   
   // Load user and check quiz status
   useEffect(() => {
@@ -86,7 +90,6 @@ export default function WaitingRoomClient({ quizId }: { quizId: string }) {
         if (quizRes.ok) {
           const status = await quizRes.json();
           if (status.active) {
-            setQuizStarted(true);
             router.push(`/play/${quizId}`);
           }
         }
@@ -147,7 +150,7 @@ export default function WaitingRoomClient({ quizId }: { quizId: string }) {
           </div>
           
           <div className="mb-6">
-            <p className="text-gray-300 mb-2">You've joined as:</p>
+            <p className="text-gray-300 mb-2">You&apos;ve joined as:</p>
             <div className="bg-slate-800/50 p-3 rounded-md flex items-center">
               <div className="w-10 h-10 rounded-full bg-fuchsia-500/20 border border-cyan-400/60 flex items-center justify-center font-bold mr-3">
                 {user?.name?.charAt(0).toUpperCase() || '?'}
@@ -180,7 +183,7 @@ export default function WaitingRoomClient({ quizId }: { quizId: string }) {
                 ))
             ) : (
               <div className="col-span-full text-center py-6 text-gray-400">
-                <p>You're the first one here! Waiting for others to join...</p>
+                <p>You&apos;re the first one here! Waiting for others to join...</p>
               </div>
             )}
           </div>
