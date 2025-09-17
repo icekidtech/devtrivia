@@ -26,9 +26,7 @@ Command.displayName = CommandPrimitive.displayName;
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface CommandProps extends React.ComponentProps<typeof CommandPrimitive> {}
 
-interface CommandDialogProps extends DialogProps {}
-
-const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
+const CommandDialog = ({ children, ...props }: DialogProps) => {
   return (
     <Dialog {...props}>
       <DialogContent className="overflow-hidden p-0 shadow-lg">
