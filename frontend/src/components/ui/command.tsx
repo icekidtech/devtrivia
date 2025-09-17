@@ -23,6 +23,9 @@ const Command = React.forwardRef<
 ));
 Command.displayName = CommandPrimitive.displayName;
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface CommandProps extends React.ComponentProps<typeof CommandPrimitive> {}
+
 interface CommandDialogProps extends DialogProps {}
 
 const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
