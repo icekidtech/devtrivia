@@ -78,8 +78,17 @@ export default function SignupPage() {
       }
 
       // Success handling code...
-    } catch (error: unknown) {
-      // Handle unexpected errors...
+      setMessageType('success');
+      setMessage('Account created successfully! Redirecting to login...');
+      
+      // Redirect to login after short delay
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 2000);
+      
+    } catch {
+      setMessageType('error');
+      setMessage('Network error. Please try again.');
     }
   };
 
