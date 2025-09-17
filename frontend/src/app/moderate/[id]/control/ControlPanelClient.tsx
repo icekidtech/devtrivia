@@ -46,7 +46,7 @@ export default function ControlPanelClient({ quizId }: { quizId: string }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [participants] = useState<Participant[]>([]);
   const [quizEnded, setQuizEnded] = useState(false);
   const [loading, setLoading] = useState(true);
   
