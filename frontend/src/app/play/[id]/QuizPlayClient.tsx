@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Quiz, Question, Answer, User } from '@/types';
-import { ChevronLeft, ChevronRight, Clock, AlertCircle, CheckCircle, XCircle, Award } from 'lucide-react';
+import { Quiz, User } from '@/types';
+import { Clock, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -117,7 +117,7 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
         if (!prev || prev <= 1) {
           clearInterval(timer);
           // Auto-submit current answer when time expires
-          if (!selectedAnswers[currentQuestion?.id] && currentQuestion) {
+          if (currentQuestion && !selectedAnswers[currentQuestion.id]) {
             // Handle time expiring without an answer
             console.log("Time expired for question");
           }
@@ -128,7 +128,7 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [quizStarted, currentQuestionIndex, quizSubmitted, currentQuestion]);
+  }, [quizStarted, currentQuestionIndex, quizSubmitted, currentQuestion, questionTime, selectedAnswers]);
   
   // Format time remaining
   const formatTime = (seconds: number) => {
@@ -145,35 +145,9 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
     });
   };
   
-  // Update answer selection logic to record time spent
-  const handleAnswerSelect = (questionId: string, answerId: string) => {
-    if (!questionStartTime) return;
-    
-    const timeSpent = Date.now() - questionStartTime;
-    setSelectedAnswers(prev => ({
-      ...prev,
-      [questionId]: answerId,
-      [`${questionId}_time`]: timeSpent // Store time spent
-    }));
-  };
-  
-  // Navigate to next question
-  const handleNextQuestion = () => {
-    if (quiz && currentQuestionIndex < quiz.questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    }
-  };
-  
-  // Navigate to previous question
-  const handlePrevQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-    }
-  };
-  
   // Submit quiz answers
   const handleSubmitQuiz = async () => {
-    if (!quiz || !user) return;
+    if (!quiz || !user || !quiz.questions) return;
     
     try {
       setQuizSubmitted(true);
@@ -184,7 +158,7 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
       // Calculate score locally
       quiz.questions.forEach(question => {
         const selectedAnswerId = selectedAnswers[question.id];
-        if (selectedAnswerId) {
+        if (selectedAnswerId && question.answers) {
           const correctAnswer = question.answers.find(answer => answer.isCorrect);
           if (correctAnswer && selectedAnswerId === correctAnswer.id) {
             correctCount++;
@@ -221,8 +195,6 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
       if (!resultResponse.ok) {
         throw new Error('Failed to submit quiz results');
       }
-      
-      const resultData = await resultResponse.json();
       
       setResults({
         score,
@@ -314,6 +286,7 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
               <div className="inline-flex items-center justify-center w-28 h-28 rounded-full bg-cyan-400/10 border-4 border-cyan-400 mb-4">
                 <span className="text-3xl font-bold text-cyan-400">{results.score}%</span>
               </div>
+              
               <h2 className="text-xl font-semibold">{quiz.title}</h2>
               <p className="text-gray-400">Completed</p>
             </div>
