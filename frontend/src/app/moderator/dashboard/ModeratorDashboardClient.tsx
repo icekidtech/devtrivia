@@ -34,8 +34,6 @@ export default function ModeratorDashboardClient() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(true);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [selectedQuiz, setSelectedQuiz] = useState<string | null>(null);
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
   const [questionText, setQuestionText] = useState('');
   const [options, setOptions] = useState<Option[]>([{ text: '', isCorrect: false }]);
@@ -494,7 +492,7 @@ export default function ModeratorDashboardClient() {
                 />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-fuchsia-500 flex items-center justify-center text-slate-900 font-bold border-2 border-cyan-400">
-                  {user?.name?.charAt(0).toUpperCase()}
+                  {user?.name?.charAt(0).toUpperCase() || '?'}
                 </div>
               )}
               <span className="ml-3 font-medium">{user?.name}</span>
