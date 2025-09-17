@@ -47,6 +47,8 @@ export default function ModeratorDashboardClient() {
 
   const [timePerQuestion, setTimePerQuestion] = useState(20);
 
+  const [justCreatedQuizId, setJustCreatedQuizId] = useState<string | null>(null);
+
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (stored) {
@@ -159,7 +161,11 @@ export default function ModeratorDashboardClient() {
       setQuizzes([...quizzes, newQuiz]);
       setTitle('');
       setDescription('');
-      setActiveNav('manage');
+      
+      // Set the newly created quiz as selected and redirect to questions tab
+      setSelectedQuizId(newQuiz.id);
+      setJustCreatedQuizId(newQuiz.id);
+      setActiveNav('questions');
     } catch (err) {
       console.error('Error creating quiz:', err);
       setError('Failed to create quiz. Please try again.');
@@ -533,6 +539,20 @@ export default function ModeratorDashboardClient() {
           </div>
         )}
 
+        {/* Success message for newly created quiz */}
+        {justCreatedQuizId && activeNav === 'questions' && (
+          <div className="bg-lime-400/20 border border-lime-400/40 text-lime-400 p-3 rounded-md mb-6">
+            <p className="font-semibold">Quiz created successfully!</p>
+            <p className="text-sm">Now add questions to your quiz below. Once you're done, you can publish it from the Manage Quizzes tab.</p>
+            <button 
+              onClick={() => setJustCreatedQuizId(null)}
+              className="text-xs hover:underline mt-2"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {/* Overview Tab Content */}
         {activeNav === 'overview' && (
           <>
@@ -664,7 +684,7 @@ export default function ModeratorDashboardClient() {
                 type="submit"
                 className="bg-cyan-400 text-slate-900 px-6 py-2 rounded-md font-semibold hover:bg-cyan-500 transition transform hover:scale-105"
               >
-                Create Quiz
+                Create Quiz & Add Questions
               </button>
             </form>
           </div>
@@ -692,6 +712,29 @@ export default function ModeratorDashboardClient() {
                       </div>
                       
                       <div className="flex flex-col items-end gap-2">
+                        {/* Action buttons */}
+                        <div className="flex gap-2 mb-2">
+                          <button
+                            onClick={() => {
+                              setSelectedQuizId(quiz.id);
+                              setActiveNav('questions');
+                            }}
+                            className="px-3 py-1 bg-cyan-400/20 text-cyan-400 rounded-md hover:bg-cyan-400/30 transition text-sm"
+                          >
+                            {quiz.questions?.length ? 'Edit Questions' : 'Add Questions'}
+                          </button>
+                          
+                          {quiz.published && (
+                            <Link 
+                              href={`/moderate/${quiz.id}/waiting`}
+                              className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-md flex items-center gap-1 text-sm"
+                            >
+                              <Play size={14} />
+                              Start Session
+                            </Link>
+                          )}
+                        </div>
+
                         {quiz.published ? (
                           <div className="text-center">
                             <div className="bg-cyan-400/10 border border-cyan-400/40 text-cyan-400 px-3 py-1 rounded-md mb-2">
@@ -713,21 +756,27 @@ export default function ModeratorDashboardClient() {
                             </button>
                           </div>
                         ) : (
-                          <button
-                            onClick={() => handlePublishQuiz(quiz.id)}
-                            className="bg-lime-500 hover:bg-lime-600 text-slate-900 px-4 py-2 rounded-md font-semibold"
-                          >
-                            Publish Quiz
-                          </button>
-                        )}
-                        
-                        {!quiz.published && (
-                          <button
-                            onClick={() => handleDeleteQuiz(quiz.id)}
-                            className="text-red-400 hover:text-red-400 hover:underline text-sm"
-                          >
-                            Delete Quiz
-                          </button>
+                          <div className="flex flex-col items-end gap-2">
+                            {(quiz.questions?.length ?? 0) > 0 ? (
+                              <button
+                                onClick={() => handlePublishQuiz(quiz.id)}
+                                className="bg-lime-500 hover:bg-lime-600 text-slate-900 px-4 py-2 rounded-md font-semibold"
+                              >
+                                Publish Quiz
+                              </button>
+                            ) : (
+                              <div className="text-sm text-gray-400 italic">
+                                Add questions to publish
+                              </div>
+                            )}
+                            
+                            <button
+                              onClick={() => handleDeleteQuiz(quiz.id)}
+                              className="text-red-400 hover:text-red-400 hover:underline text-sm"
+                            >
+                              Delete Quiz
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -751,7 +800,15 @@ export default function ModeratorDashboardClient() {
         {/* Manage Questions Tab Content */}
         {activeNav === 'questions' && (
           <div>
-            <h3 className="text-xl font-semibold mb-6 text-cyan-400">Manage Questions</h3>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-semibold text-cyan-400">Manage Questions</h3>
+              <button
+                onClick={() => setActiveNav('manage')}
+                className="px-4 py-2 bg-fuchsia-500/20 text-fuchsia-500 rounded-md hover:bg-fuchsia-500/30 transition border border-fuchsia-500/30"
+              >
+                Back to Manage Quizzes
+              </button>
+            </div>
             
             <div className="mb-6">
               <label className="text-sm text-gray-400">Select Quiz</label>
@@ -766,6 +823,29 @@ export default function ModeratorDashboardClient() {
                 ))}
               </select>
             </div>
+            
+            {selectedQuizId && (
+              <div className="mb-6 p-4 bg-cyan-400/10 border border-cyan-400/30 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="font-semibold text-cyan-400">
+                      {quizzes.find(q => q.id === selectedQuizId)?.title}
+                    </h4>
+                    <p className="text-sm text-gray-400">
+                      Current questions: {questions.length}
+                    </p>
+                  </div>
+                  {!quizzes.find(q => q.id === selectedQuizId)?.published && questions.length > 0 && (
+                    <button
+                      onClick={() => handlePublishQuiz(selectedQuizId)}
+                      className="bg-lime-500 hover:bg-lime-600 text-slate-900 px-4 py-2 rounded-md font-semibold"
+                    >
+                      Publish Quiz
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
             
             {selectedQuizId && !quizzes.find(q => q.id === selectedQuizId)?.published && (
               <div className="mb-8">
@@ -891,6 +971,9 @@ export default function ModeratorDashboardClient() {
             ) : (
               <div className="text-gray-400 text-center py-8">
                 <p>No questions added yet.</p>
+                {selectedQuizId && (
+                  <p className="mt-2">Add your first question above to get started!</p>
+                )}
               </div>
             )}
           </div>
