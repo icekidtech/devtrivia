@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Question } from '@/types';
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -11,7 +12,7 @@ interface Quiz {
   description: string;
   published: boolean;
   joinCode?: string;
-  questions?: any[];
+  questions?: Question[];
 }
 
 export default function QuizzesPage() {
