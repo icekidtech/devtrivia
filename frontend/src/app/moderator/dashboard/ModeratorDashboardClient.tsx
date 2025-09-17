@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import QRCode from 'react-qr-code';
 import { User, Quiz, Question, Answer, Option, LeaderboardEntry } from '@/types';
-import { handleApiError, safeFetch } from '@/utils/errorHandling';
 import { 
   BarChart3, 
   User as UserIcon, 
@@ -44,7 +43,6 @@ export default function ModeratorDashboardClient() {
   const [error, setError] = useState<string | null>(null);
   const [activeNav, setActiveNav] = useState('overview');
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
@@ -115,6 +113,7 @@ export default function ModeratorDashboardClient() {
       if (!user.token || isTokenExpired(user.token)) {
         localStorage.removeItem('user');
         window.location.href = '/login?expired=1';
+        return;
       }
     }
   }, []);
@@ -163,8 +162,9 @@ export default function ModeratorDashboardClient() {
       setTitle('');
       setDescription('');
       setActiveNav('manage');
-    } catch {
-      setError('Failed to create quiz');
+    } catch (err) {
+      console.error('Error creating quiz:', err);
+      setError('Failed to create quiz. Please try again.');
     }
   };
 
@@ -172,17 +172,16 @@ export default function ModeratorDashboardClient() {
     try {
       const res = await fetch(`${BACKEND}/quizzes/${quizId}/publish`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
       });
       
       if (!res.ok) {
         throw new Error(`Failed to publish quiz: ${res.statusText}`);
       }
       
-      const updatedQuiz = await res.json();
-      setQuizzes(quizzes.map(q => q.id === quizId ? updatedQuiz : q));
-    } catch {
-      setError('Failed to publish quiz');
+      setQuizzes(quizzes.map(q => q.id === quizId ? { ...q, published: true } : q));
+    } catch (err) {
+      console.error('Error publishing quiz:', err);
+      setError('Failed to publish quiz. Please try again.');
     }
   };
 
@@ -190,22 +189,21 @@ export default function ModeratorDashboardClient() {
     try {
       const res = await fetch(`${BACKEND}/quizzes/${quizId}/unpublish`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
       });
       
       if (!res.ok) {
         throw new Error(`Failed to unpublish quiz: ${res.statusText}`);
       }
       
-      const updatedQuiz = await res.json();
-      setQuizzes(quizzes.map(q => q.id === quizId ? updatedQuiz : q));
-    } catch {
-      setError('Failed to unpublish quiz');
+      setQuizzes(quizzes.map(q => q.id === quizId ? { ...q, published: false } : q));
+    } catch (err) {
+      console.error('Error unpublishing quiz:', err);
+      setError('Failed to unpublish quiz. Please try again.');
     }
   };
 
   const handleDeleteQuiz = async (quizId: string) => {
-    if (!confirm('Are you sure you want to delete this quiz?')) return;
+    if (!confirm('Are you sure you want to delete this quiz? This action cannot be undone.')) return;
     
     try {
       const res = await fetch(`${BACKEND}/quizzes/${quizId}`, {
@@ -217,28 +215,21 @@ export default function ModeratorDashboardClient() {
       }
       
       setQuizzes(quizzes.filter(q => q.id !== quizId));
-    } catch {
-      setError('Failed to delete quiz');
+    } catch (err) {
+      console.error('Error deleting quiz:', err);
+      setError('Failed to delete quiz. Please try again.');
     }
   };
 
-  const handleViewLeaderboard = async (quizId: string) => {
-    try {
-      const res = await fetch(`${BACKEND}/quizzes/${quizId}/leaderboard`);
-      if (!res.ok) {
-        throw new Error(`Failed to fetch leaderboard: ${res.statusText}`);
-      }
-      const data = await res.json();
-      setLeaderboard(data);
-      setSelectedQuiz(quizId);
-    } catch {
-      setError('Failed to load leaderboard');
-    }
+  const addOption = () => {
+    setOptions([...options, { text: '', isCorrect: false }]);
   };
-
-  const addOption = () => setOptions([...options, { text: '', isCorrect: false }]);
-  const removeOption = (idx: number) => setOptions(options.filter((_, i) => i !== idx));
-  const updateOptionText = (idx: number, text: string) => {
+  
+  const removeOption = (idx: number) => {
+    setOptions(options.filter((_, i) => i !== idx));
+  };
+  
+  const updateOption = (idx: number, text: string) => {
     setOptions(options.map((opt, i) => i === idx ? { ...opt, text } : opt));
   };
   
@@ -285,9 +276,6 @@ export default function ModeratorDashboardClient() {
           }),
         })
       ));
-      
-      setQuestionText('');
-      setOptions([{ text: '', isCorrect: false }]);
       
       const questionsRes = await fetch(`${BACKEND}/questions/quiz/${selectedQuizId}`);
       if (!questionsRes.ok) {
@@ -549,7 +537,7 @@ export default function ModeratorDashboardClient() {
 
         {/* Overview Tab Content */}
         {activeNav === 'overview' && (
-          <div>
+          <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {/* Welcome Card */}
               <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20 shadow-lg">
@@ -631,7 +619,7 @@ export default function ModeratorDashboardClient() {
                 ))}
               </div>
             </div>
-          </div>
+          </>
         )}
         
         {/* Create Quiz Tab Content */}
@@ -644,53 +632,42 @@ export default function ModeratorDashboardClient() {
                 <label className="text-sm text-gray-400">Quiz Title</label>
                 <input
                   type="text"
-                  placeholder="Enter quiz title"
                   value={title}
-                  onChange={e => setTitle(e.target.value)}
-                  required
-                  className="bg-[#3A3A55] w-full text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400"
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Enter quiz title"
+                  className="bg-[#3A3A55] text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400 w-full"
                 />
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm text-gray-400">Quiz Description</label>
+                <label className="text-sm text-gray-400">Description</label>
                 <textarea
-                  placeholder="Enter quiz description"
                   value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  className="bg-[#3A3A55] w-full text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400 min-h-[100px]"
-                ></textarea>
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Enter quiz description"
+                  rows={3}
+                  className="bg-[#3A3A55] text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400 w-full"
+                />
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm text-gray-400">Time Per Question (seconds)</label>
-                <div className="flex items-center">
-                  <input
-                    type="range"
-                    min="5"
-                    max="120"
-                    step="5"
-                    value={timePerQuestion}
-                    onChange={e => setTimePerQuestion(parseInt(e.target.value))}
-                    className="w-full mr-3"
-                  />
-                  <span className="text-cyan-400 font-mono w-12">{timePerQuestion}s</span>
-                </div>
-                <p className="text-xs text-gray-500">
-                  {timePerQuestion < 15 ? "Fast-paced" : 
-                   timePerQuestion < 30 ? "Standard" : 
-                   timePerQuestion < 60 ? "Complex questions" : "Technical deep-dive"}
-                </p>
+                <label className="text-sm text-gray-400">Time per Question (seconds)</label>
+                <input
+                  type="number"
+                  value={timePerQuestion}
+                  onChange={(e) => setTimePerQuestion(Number(e.target.value))}
+                  min="5"
+                  max="300"
+                  className="bg-[#3A3A55] text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400 w-full"
+                />
               </div>
               
-              <div>
-                <button 
-                  type="submit"
-                  className="bg-cyan-400 text-slate-900 px-6 py-2 rounded-md font-semibold hover:bg-cyan-500 transition transform hover:scale-105"
-                >
-                  Create Quiz
-                </button>
-              </div>
+              <button
+                type="submit"
+                className="bg-cyan-400 text-slate-900 px-6 py-2 rounded-md font-semibold hover:bg-cyan-500 transition transform hover:scale-105"
+              >
+                Create Quiz
+              </button>
             </form>
           </div>
         )}
@@ -698,304 +675,224 @@ export default function ModeratorDashboardClient() {
         {/* Manage Quizzes Tab Content */}
         {activeNav === 'manage' && (
           <div>
-            <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20">
-              <h3 className="text-xl font-semibold mb-6">Your Quizzes</h3>
-              
-              {quizzes.length > 0 ? (
-                <div className="space-y-4">
-                  {quizzes.map((quiz) => (
-                    <div key={quiz.id} className="border-b border-gray-600/30 pb-4 last:border-b-0 last:pb-0">
-                      <div className="flex flex-wrap justify-between items-start">
-                        <div className="mb-2">
-                          <h4 className="text-lg font-semibold">{quiz.title}</h4>
-                          <p className="text-gray-400">{quiz.description || 'No description'}</p>
-                          <p className="text-sm text-gray-500 mt-1">
-                            Questions: {quiz.questions?.length ?? 0}
-                            {quiz.published && (
-                              <span className="ml-2 text-lime-400">• Published</span>
-                            )}
-                          </p>
-                        </div>
-                        
-                        <div className="flex flex-col items-end gap-2">
-                          {quiz.published ? (
-                            <div className="text-center">
-                              <div className="bg-cyan-400/10 border border-cyan-400/40 text-cyan-400 px-3 py-1 rounded-md mb-2">
-                                <span className="font-mono font-bold">Join Code: {quiz.joinCode}</span>
-                              </div>
-                              <div className="my-3 bg-slate-900 p-3 inline-block rounded border border-cyan-400/30">
-                                <QRCode 
-                                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/join?code=${quiz.joinCode}`} 
-                                  size={100}
-                                  bgColor={"rgba(26, 26, 46, 0.8)"}
-                                  fgColor={"#00D4FF"}
-                                />
-                              </div>
-                              <button
-                                onClick={() => handleUnpublishQuiz(quiz.id)}
-                                className="text-red-400 hover:text-red-400 hover:underline text-sm block mt-2"
-                              >
-                                Unpublish Quiz
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => handlePublishQuiz(quiz.id)}
-                              className="bg-cyan-400 text-slate-900 px-4 py-2 rounded-md font-semibold hover:bg-cyan-500 transition"
-                              disabled={!quiz.questions?.length}
-                            >
-                              Publish Quiz
-                            </button>
+            <h3 className="text-xl font-semibold mb-6 text-cyan-400">Your Quizzes</h3>
+            
+            {quizzes.length > 0 ? (
+              <div className="space-y-4">
+                {quizzes.map((quiz) => (
+                  <div key={quiz.id} className="border-b border-gray-600/30 pb-4 last:border-b-0 last:pb-0">
+                    <div className="flex flex-wrap justify-between items-start">
+                      <div className="mb-2">
+                        <h4 className="text-lg font-semibold">{quiz.title}</h4>
+                        <p className="text-gray-400">{quiz.description || 'No description'}</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Questions: {quiz.questions?.length ?? 0}
+                          {quiz.published && (
+                            <span className="ml-2 text-lime-400">• Published</span>
                           )}
-                        </div>
+                        </p>
                       </div>
                       
-                      <div className="flex space-x-2 mt-4">
-                        <button
-                          onClick={() => {
-                            setSelectedQuizId(quiz.id);
-                            setActiveNav('questions');
-                          }}
-                          className="bg-cyan-400/20 hover:bg-cyan-400/30 text-cyan-400 px-4 py-1 rounded border border-cyan-400/30 transition-colors duration-300"
-                        >
-                          {quiz.published ? "View Questions" : "Edit Questions"}
-                        </button>
-                        <button
-                          onClick={() => handleViewLeaderboard(quiz.id)}
-                          className="bg-fuchsia-500/20 hover:bg-fuchsia-500/30 text-fuchsia-500 px-4 py-1 rounded border border-fuchsia-500/30 transition-colors duration-300"
-                        >
-                          View Leaderboard
-                        </button>
+                      <div className="flex flex-col items-end gap-2">
+                        {quiz.published ? (
+                          <div className="text-center">
+                            <div className="bg-cyan-400/10 border border-cyan-400/40 text-cyan-400 px-3 py-1 rounded-md mb-2">
+                              <span className="font-mono font-bold">Join Code: {quiz.joinCode}</span>
+                            </div>
+                            <div className="my-3 bg-slate-900 p-3 inline-block rounded border border-cyan-400/30">
+                              <QRCode 
+                                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/join?code=${quiz.joinCode}`} 
+                                size={100}
+                                bgColor={"rgba(26, 26, 46, 0.8)"}
+                                fgColor={"#00D4FF"}
+                              />
+                            </div>
+                            <button
+                              onClick={() => handleUnpublishQuiz(quiz.id)}
+                              className="text-red-400 hover:text-red-400 hover:underline text-sm block mt-2"
+                            >
+                              Unpublish Quiz
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handlePublishQuiz(quiz.id)}
+                            className="bg-lime-500 hover:bg-lime-600 text-slate-900 px-4 py-2 rounded-md font-semibold"
+                          >
+                            Publish Quiz
+                          </button>
+                        )}
+                        
                         {!quiz.published && (
                           <button
                             onClick={() => handleDeleteQuiz(quiz.id)}
-                            className="bg-red-400/20 hover:bg-red-400/30 text-red-400 px-4 py-1 rounded border border-red-400/30 transition-colors duration-300"
+                            className="text-red-400 hover:text-red-400 hover:underline text-sm"
                           >
-                            Delete
+                            Delete Quiz
                           </button>
                         )}
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-gray-400 text-center py-10">
-                  <p>You haven&apos;t created any quizzes yet.</p>
-                  <button 
-                    onClick={() => setActiveNav('create')}
-                    className="mt-4 bg-cyan-400/20 text-cyan-400 px-4 py-2 rounded-md hover:bg-cyan-400/30 transition"
-                  >
-                    Create Your First Quiz
-                  </button>
-                </div>
-              )}
-            </div>
-            
-            {/* Leaderboard Modal */}
-            {selectedQuiz && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold text-cyan-400">
-                      Leaderboard for {quizzes.find(q => q.id === selectedQuiz)?.title}
-                    </h2>
-                    <button 
-                      onClick={() => setSelectedQuiz(null)}
-                      className="text-gray-400 hover:text-gray-200"
-                    >
-                      Close
-                    </button>
                   </div>
-                  
-                  {leaderboard && leaderboard.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="text-left border-b border-cyan-400/20">
-                            <th className="pb-2">Rank</th>
-                            <th className="pb-2">Player</th>
-                            <th className="pb-2">Score</th>
-                            <th className="pb-2">Date</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {leaderboard.map((entry, idx) => (
-                            <tr key={idx} className="border-b border-gray-600/30">
-                              <td className="py-3">{idx + 1}</td>
-                              <td className="py-3">{entry.userName}</td>
-                              <td className="py-3 font-medium text-cyan-400">{entry.score}</td>
-                              <td className="py-3">{new Date(entry.date).toLocaleDateString()}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="text-gray-400 text-center py-8">
-                      <p>No entries in the leaderboard yet.</p>
-                    </div>
-                  )}
-                </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-gray-400 text-center py-8">
+                <p>No quizzes created yet.</p>
+                <button 
+                  onClick={() => setActiveNav('create')}
+                  className="mt-4 px-6 py-2 bg-cyan-400/20 text-cyan-400 rounded-md hover:bg-cyan-400/30 transition"
+                >
+                  Create Your First Quiz
+                </button>
               </div>
             )}
           </div>
         )}
         
-        {/* Questions Tab Content */}
+        {/* Manage Questions Tab Content */}
         {activeNav === 'questions' && (
           <div>
-            {selectedQuizId ? (
-              <div className="space-y-8">
-                <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-semibold">
-                      {quizzes.find(q => q.id === selectedQuizId)?.title} Questions
-                    </h3>
-                    
-                    <select
-                      value={selectedQuizId}
-                      onChange={e => setSelectedQuizId(e.target.value)}
-                      className="bg-[#3A3A55] text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400"
-                    >
-                      {quizzes.map(q => (
-                        <option key={q.id} value={q.id}>{q.title}</option>
-                      ))}
-                    </select>
+            <h3 className="text-xl font-semibold mb-6 text-cyan-400">Manage Questions</h3>
+            
+            <div className="mb-6">
+              <label className="text-sm text-gray-400">Select Quiz</label>
+              <select
+                value={selectedQuizId || ''}
+                onChange={(e) => setSelectedQuizId(e.target.value)}
+                className="bg-[#3A3A55] text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400 w-full"
+              >
+                <option value="">Select a quiz</option>
+                {quizzes.map(q => (
+                  <option key={q.id} value={q.id}>{q.title}</option>
+                ))}
+              </select>
+            </div>
+            
+            {selectedQuizId && !quizzes.find(q => q.id === selectedQuizId)?.published && (
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold mb-4">
+                  {editingQuestion ? 'Edit Question' : 'Add New Question'}
+                </h4>
+                
+                <form onSubmit={editingQuestion ? updateQuestion : handleCreateQuestion} className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-400">Question Text</label>
+                    <input
+                      type="text"
+                      placeholder="Enter question text"
+                      value={questionText}
+                      onChange={(e) => setQuestionText(e.target.value)}
+                      className="bg-[#3A3A55] text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400 w-full"
+                    />
                   </div>
                   
-                  {!quizzes.find(q => q.id === selectedQuizId)?.published && (
-                    <div className="mb-8">
-                      <h4 className="text-lg font-semibold mb-4">
-                        {editingQuestion ? 'Edit Question' : 'Add New Question'}
-                      </h4>
-                      
-                      <form onSubmit={editingQuestion ? updateQuestion : handleCreateQuestion} className="space-y-4">
-                        <div className="space-y-2">
-                          <label className="text-sm text-gray-400">Question Text</label>
-                          <input
-                            type="text"
-                            placeholder="Enter question text"
-                            value={questionText}
-                            onChange={e => setQuestionText(e.target.value)}
-                            required
-                            className="bg-[#3A3A55] w-full text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <label className="text-sm text-gray-400">Answer Options</label>
-                          {options.map((opt, idx) => (
-                            <div key={idx} className="flex items-center space-x-2 mb-3">
-                              <input
-                                type="text"
-                                placeholder={`Option ${idx + 1}`}
-                                value={opt.text}
-                                onChange={e => updateOptionText(idx, e.target.value)}
-                                required
-                                className="bg-[#3A3A55] flex-1 text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setCorrect(idx)}
-                                className={`px-3 py-2 rounded-md ${
-                                  opt.isCorrect 
-                                    ? 'bg-lime-500 text-slate-900' 
-                                    : 'bg-gray-600 text-gray-200'
-                                }`}
-                              >
-                                {opt.isCorrect ? '✓' : '○'}
-                              </button>
-                              {options.length > 2 && (
-                                <button
-                                  type="button"
-                                  onClick={() => removeOption(idx)}
-                                  className="px-3 py-2 bg-red-500 text-white rounded-md"
-                                >
-                                  ×
-                                </button>
-                              )}
-                            </div>
-                          ))}
-                          
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-400">Answer Options</label>
+                    {options.map((opt, idx) => (
+                      <div key={idx} className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          placeholder={`Option ${idx + 1}`}
+                          value={opt.text}
+                          onChange={(e) => updateOption(idx, e.target.value)}
+                          className="bg-[#3A3A55] text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400 flex-1"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setCorrect(idx)}
+                          className={`px-3 py-2 rounded-md ${
+                            opt.isCorrect 
+                              ? 'bg-lime-500 text-slate-900' 
+                              : 'bg-gray-600 text-gray-200'
+                          }`}
+                        >
+                          {opt.isCorrect ? '✓' : '○'}
+                        </button>
+                        {options.length > 2 && (
                           <button
                             type="button"
-                            onClick={addOption}
-                            className="text-cyan-400 hover:underline"
+                            onClick={() => removeOption(idx)}
+                            className="px-3 py-2 bg-red-500 text-white rounded-md"
                           >
-                            + Add Option
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    
+                    <button
+                      type="button"
+                      onClick={addOption}
+                      className="text-cyan-400 hover:underline"
+                    >
+                      + Add Option
+                    </button>
+                  </div>
+                  
+                  <div className="flex space-x-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuestionText('');
+                        setOptions([{ text: '', isCorrect: false }]);
+                        setEditingQuestion(null);
+                      }}
+                      className="text-gray-200 hover:underline"
+                    >
+                      {editingQuestion ? 'Cancel' : 'Clear'}
+                    </button>
+                    
+                    <button
+                      type="submit"
+                      className="bg-cyan-400 text-slate-900 px-6 py-2 rounded-md font-semibold hover:bg-cyan-500 transition transform hover:scale-105"
+                    >
+                      {editingQuestion ? 'Update Question' : 'Add Question'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+            
+            <h4 className="text-lg font-semibold mb-4 text-cyan-400">Question List</h4>
+            
+            {questions.length > 0 ? (
+              <div className="space-y-4">
+                {questions.map(q => (
+                  <div key={q.id} className="border border-gray-600/30 rounded-md p-4">
+                    <div className="flex justify-between">
+                      <h5 className="font-medium">{q.text}</h5>
+                      {!quizzes.find(quiz => quiz.id === selectedQuizId)?.published && (
+                        <div>
+                          <button
+                            onClick={() => startEditingQuestion(q)}
+                            className="text-cyan-400 hover:underline mr-3"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteQuestion(q.id)}
+                            className="text-red-400 hover:underline"
+                          >
+                            Delete
                           </button>
                         </div>
-                        
-                        <div className="flex space-x-4">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setQuestionText('');
-                              setOptions([{ text: '', isCorrect: false }]);
-                              setEditingQuestion(null);
-                            }}
-                            className="text-gray-200 hover:underline"
-                          >
-                            {editingQuestion ? 'Cancel' : 'Clear'}
-                          </button>
-                          
-                          <button
-                            type="submit"
-                            className="bg-cyan-400 text-slate-900 px-6 py-2 rounded-md font-semibold hover:bg-cyan-500 transition transform hover:scale-105"
-                          >
-                            {editingQuestion ? 'Update Question' : 'Add Question'}
-                          </button>
-                        </div>
-                      </form>
+                      )}
                     </div>
-                  )}
-                  
-                  <h4 className="text-lg font-semibold mb-4 text-cyan-400">Question List</h4>
-                  
-                  {questions.length > 0 ? (
-                    <div className="space-y-4">
-                      {questions.map(q => (
-                        <div key={q.id} className="border border-gray-600/30 rounded-md p-4">
-                          <div className="flex justify-between">
-                            <h5 className="font-medium">{q.text}</h5>
-                            {!quizzes.find(quiz => quiz.id === selectedQuizId)?.published && (
-                              <div>
-                                <button
-                                  onClick={() => startEditingQuestion(q)}
-                                  className="text-cyan-400 hover:underline mr-3"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteQuestion(q.id)}
-                                  className="text-red-400 hover:underline"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                          
-                          <ul className="mt-2 ml-5 list-disc">
-                            {q.answers?.map((a: Answer) => (
-                              <li key={a.id} className={a.isCorrect ? 'text-lime-400 font-medium' : 'text-gray-200'}>
-                                {a.text} {a.isCorrect && '✓'}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
+                    
+                    <ul className="mt-2 ml-5 list-disc">
+                      {q.answers?.map((a: Answer) => (
+                        <li key={a.id} className={a.isCorrect ? 'text-lime-400 font-medium' : 'text-gray-200'}>
+                          {a.text} {a.isCorrect && '✓'}
+                        </li>
                       ))}
-                    </div>
-                  ) : (
-                    <div className="text-gray-400 text-center py-8">
-                      <p>No questions added yet.</p>
-                    </div>
-                  )}
-                </div>
+                    </ul>
+                  </div>
+                ))}
               </div>
             ) : (
-              <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20 text-center">
-                <p className="text-gray-400">Please select a quiz to manage questions.</p>
+              <div className="text-gray-400 text-center py-8">
+                <p>No questions added yet.</p>
               </div>
             )}
           </div>
