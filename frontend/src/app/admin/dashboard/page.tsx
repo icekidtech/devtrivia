@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation';
 import AdminDashboardClient from './AdminDashboardClient';
 
 // This should be a server component that handles auth and renders the client component
