@@ -111,22 +111,24 @@ export default function NavBar() {
           </div>
 
           <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-8">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    "px-3 py-2 text-sm font-medium transition-colors hover:text-cyan-400",
-                    pathname === item.href
-                      ? "text-cyan-400"
-                      : "text-gray-300"
-                  )}
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
+            {!user && (
+              <div className="ml-10 flex items-baseline space-x-8">
+                {navigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={cn(
+                      "px-3 py-2 text-sm font-medium transition-colors hover:text-cyan-400",
+                      pathname === item.href
+                        ? "text-cyan-400"
+                        : "text-gray-300"
+                    )}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center space-x-4">
