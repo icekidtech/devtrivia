@@ -4,18 +4,49 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   ChevronRight, Award, Clock, Users, CheckCircle, 
-  AlertTriangle, BarChart2
+  BarChart2
 } from 'lucide-react';
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;
 
+interface Quiz {
+  id: string;
+  title: string;
+  description: string;
+  questions: Question[];
+}
+
+interface Question {
+  id: string;
+  text: string;
+  answers: Answer[];
+}
+
+interface Answer {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+}
+
+interface LeaderboardEntry {
+  userId: string;
+  userName: string;
+  score: number;
+  correctCount: number;
+}
+
+interface Participant {
+  id: string;
+  name: string;
+}
+
 export default function ControlPanelClient({ quizId }: { quizId: string }) {
   const router = useRouter();
-  const [quiz, setQuiz] = useState<any>(null);
+  const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const [participants, setParticipants] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [participants, setParticipants] = useState<Participant[]>([]);
   const [quizEnded, setQuizEnded] = useState(false);
   const [loading, setLoading] = useState(true);
   
@@ -36,89 +67,62 @@ export default function ControlPanelClient({ quizId }: { quizId: string }) {
         setLoading(false);
       }
     };
-    
+
     fetchQuizData();
-    
-    // Poll for real-time updates
-    const pollData = setInterval(async () => {
-      try {
-        // Get participants list
-        const participantsRes = await fetch(`${BACKEND}/quizzes/${quizId}/participants`);
-        if (participantsRes.ok) {
-          const data = await participantsRes.json();
-          setParticipants(data);
-        }
-        
-        // Get leaderboard if showing
-        if (showLeaderboard) {
-          const leaderboardRes = await fetch(`${BACKEND}/quizzes/${quizId}/leaderboard`);
-          if (leaderboardRes.ok) {
-            const data = await leaderboardRes.json();
-            setLeaderboard(data);
-          }
-        }
-      } catch (err) {
-        console.error('Error polling data:', err);
-      }
-    }, 2000);
-    
-    return () => clearInterval(pollData);
-  }, [quizId, showLeaderboard]);
-  
-  const handleNextQuestion = async () => {
-    try {
-      if (currentQuestionIndex < quiz.questions.length - 1) {
-        // First show leaderboard
-        setShowLeaderboard(true);
-        
-        // Get intermediate leaderboard
-        const leaderboardRes = await fetch(`${BACKEND}/quizzes/${quizId}/leaderboard`);
-        const leaderboardData = await leaderboardRes.json();
-        setLeaderboard(leaderboardData);
-        
-        // Wait 10 seconds then proceed to next question
-        setTimeout(async () => {
-          setShowLeaderboard(false);
-          setCurrentQuestionIndex(prevIndex => prevIndex + 1);
-          
-          // Notify backend to advance to next question
-          await fetch(`${BACKEND}/quizzes/${quizId}/next-question`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              questionIndex: currentQuestionIndex + 1 
-            }),
-          });
-        }, 10000);
-      } else {
-        // This was the last question, end the quiz
-        setQuizEnded(true);
-        setShowLeaderboard(true);
-        
-        // Get final leaderboard
-        const leaderboardRes = await fetch(`${BACKEND}/quizzes/${quizId}/leaderboard`);
-        const leaderboardData = await leaderboardRes.json();
-        setLeaderboard(leaderboardData);
-        
-        // Notify backend that quiz is complete
-        await fetch(`${BACKEND}/quizzes/${quizId}/end`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
-    } catch (err) {
-      console.error('Error advancing question:', err);
+  }, [quizId]);
+
+  const handleNextQuestion = () => {
+    if (quiz && currentQuestionIndex < quiz.questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setShowLeaderboard(true);
+      
+      // Simulate leaderboard data - in real app this would come from WebSocket
+      const mockLeaderboard: LeaderboardEntry[] = [
+        { userId: '1', userName: 'Player 1', score: 850, correctCount: currentQuestionIndex + 1 },
+        { userId: '2', userName: 'Player 2', score: 720, correctCount: currentQuestionIndex },
+        { userId: '3', userName: 'Player 3', score: 680, correctCount: currentQuestionIndex },
+      ];
+      setLeaderboard(mockLeaderboard);
+      
+      // Hide leaderboard after 5 seconds and show next question
+      setTimeout(() => {
+        setShowLeaderboard(false);
+      }, 5000);
+    } else {
+      // End quiz
+      setQuizEnded(true);
+      setShowLeaderboard(true);
     }
   };
-  
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen w-full bg-slate-900">
-        <div className="animate-pulse text-cyan-400 text-2xl">Loading control panel...</div>
+      <div className="min-h-screen bg-slate-900 text-gray-200 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+          <p className="text-lg">Loading quiz...</p>
+        </div>
       </div>
     );
   }
-  
+
+  if (!quiz) {
+    return (
+      <div className="min-h-screen bg-slate-900 text-gray-200 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-400 mb-4">Quiz Not Found</h1>
+          <p className="text-gray-400 mb-6">The quiz you&apos;re looking for doesn&apos;t exist or has been removed.</p>
+          <button
+            onClick={() => router.push('/moderator/dashboard')}
+            className="px-6 py-2 bg-cyan-400 text-slate-900 rounded-md font-semibold hover:bg-cyan-500"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const currentQuestion = quiz?.questions?.[currentQuestionIndex];
   
   return (
@@ -136,7 +140,7 @@ export default function ControlPanelClient({ quizId }: { quizId: string }) {
           </div>
         </div>
       </header>
-      
+
       {!quizEnded && !showLeaderboard && (
         <div className="bg-[#2D2D44] rounded-lg border border-cyan-400/20 p-6 mb-6">
           <h2 className="text-xl font-semibold mb-6">Current Question</h2>
@@ -146,7 +150,7 @@ export default function ControlPanelClient({ quizId }: { quizId: string }) {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {currentQuestion?.answers?.map((answer: any) => (
+            {currentQuestion?.answers?.map((answer: Answer) => (
               <div 
                 key={answer.id}
                 className={`p-3 rounded-md border ${
