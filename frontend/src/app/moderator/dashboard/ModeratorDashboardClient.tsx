@@ -543,7 +543,7 @@ export default function ModeratorDashboardClient() {
         {justCreatedQuizId && activeNav === 'questions' && (
           <div className="bg-lime-400/20 border border-lime-400/40 text-lime-400 p-3 rounded-md mb-6">
             <p className="font-semibold">Quiz created successfully!</p>
-            <p className="text-sm">Now add questions to your quiz below. Once you're done, you can publish it from the Manage Quizzes tab.</p>
+            <p className="text-sm">Now add questions to your quiz below. Once you&apos;re done, you can publish it from the Manage Quizzes tab.</p>
             <button 
               onClick={() => setJustCreatedQuizId(null)}
               className="text-xs hover:underline mt-2"
