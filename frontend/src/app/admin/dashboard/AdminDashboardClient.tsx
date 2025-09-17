@@ -4,12 +4,42 @@ import { useState, useEffect } from 'react';
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  createdAt: string;
+  username?: string;
+}
+
+interface Quiz {
+  id: string;
+  title: string;
+  description: string;
+  ownerId: string;
+  category?: string;
+}
+
+interface Question {
+  id: string;
+  text: string;
+  quizId: string;
+}
+
+interface Answer {
+  id: string;
+  text: string;
+  questionId: string;
+  isCorrect: boolean;
+}
+
 export default function AdminDashboardClient() {
   const [userName, setUserName] = useState('');
-  const [users, setUsers] = useState<any[]>([]);
-  const [quizzes, setQuizzes] = useState<any[]>([]);
-  const [questions, setQuestions] = useState<any[]>([]);
-  const [answers, setAnswers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [answers, setAnswers] = useState<Answer[]>([]);
   const [loading, setLoading] = useState(true);
 
   const token = typeof window !== 'undefined'
@@ -270,6 +300,7 @@ export default function AdminDashboardClient() {
             <tr>
               <th className="border px-2 py-1">Text</th>
               <th className="border px-2 py-1">Question ID</th>
+              <th className="border px-2 py-1">Correct</th>
               <th className="border px-2 py-1">Actions</th>
             </tr>
           </thead>
@@ -284,6 +315,7 @@ export default function AdminDashboardClient() {
                   />
                 </td>
                 <td className="border px-2 py-1">{a.questionId}</td>
+                <td className="border px-2 py-1">{a.isCorrect ? 'Yes' : 'No'}</td>
                 <td className="border px-2 py-1">
                   <button
                     onClick={() => handleDeleteAnswer(a.id)}
