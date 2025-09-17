@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -30,11 +31,6 @@ export default function NavBar() {
 
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-  // Don't render the navbar on dashboard pages
-  if (pathname?.includes('/dashboard')) {
-    return null;
-  }
-
   useEffect(() => {
     try {
       const stored = localStorage.getItem('user');
@@ -59,6 +55,11 @@ export default function NavBar() {
       setError('Failed to load user data');
     }
   }, []);
+
+  // Don't render the navbar on dashboard pages
+  if (pathname?.includes('/dashboard')) {
+    return null;
+  }
 
   const handleLogout = () => {
     try {
@@ -144,9 +145,11 @@ export default function NavBar() {
                   {/* Profile Image */}
                   <div className="flex items-center mr-4">
                     {user.profileImage ? (
-                      <img
+                      <Image
                         src={`${BACKEND}${user.profileImage}`}
                         alt={user.name}
+                        width={32}
+                        height={32}
                         className="w-8 h-8 rounded-full object-cover border-2 border-white mr-2"
                         onError={(e) => {
                           console.error('Image failed to load');
