@@ -40,9 +40,9 @@ export const logError = (error: unknown, context?: string): void => {
 /**
  * Try to parse JSON from a response, with error handling
  */
-export const safeJsonParse = async (response: Response): Promise<any> => {
+export const safeJsonParse = async <T = unknown>(response: Response): Promise<T> => {
   try {
-    return await response.json();
+    return await response.json() as T;
   } catch (error) {
     console.error('Failed to parse JSON response', error);
     throw new Error('Invalid response from server');
@@ -52,7 +52,7 @@ export const safeJsonParse = async (response: Response): Promise<any> => {
 /**
  * Fetch wrapper with built-in error handling
  */
-export const safeFetch = async (url: string, options?: RequestInit): Promise<any> => {
+export const safeFetch = async <T = unknown>(url: string, options?: RequestInit): Promise<T> => {
   try {
     const response = await fetch(url, options);
     
@@ -69,7 +69,7 @@ export const safeFetch = async (url: string, options?: RequestInit): Promise<any
       throw new Error(errorMsg);
     }
     
-    return await safeJsonParse(response);
+    return await safeJsonParse<T>(response);
   } catch (error) {
     throw error; // Rethrow for the caller to handle with handleApiError
   }
