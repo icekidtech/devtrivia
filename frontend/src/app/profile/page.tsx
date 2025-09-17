@@ -1,11 +1,28 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  token: string;
+  profileImage?: string;
+}
+
+interface UpdateData {
+  name?: string;
+  email?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}
+
 export default function ProfilePage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
   
@@ -89,8 +106,8 @@ export default function ProfilePage() {
       let updatedProfileImage = user.profileImage;
       if (profileImage) {
         try {
-          const formData = new FormData();
-          formData.append('image', profileImage);  // Ensure field name matches backend
+          const formDataImage = new FormData();
+          formDataImage.append('image', profileImage);  // Ensure field name matches backend
           
           console.log('Uploading image:', profileImage.name, profileImage.type, profileImage.size);
           
@@ -100,7 +117,7 @@ export default function ProfilePage() {
               'Authorization': `Bearer ${user.token}`
             },
             // Don't set Content-Type with FormData - it will be set automatically with boundary
-            body: formData
+            body: formDataImage
           });
           
           if (!imageRes.ok) {
@@ -127,18 +144,25 @@ export default function ProfilePage() {
       }
       
       // Update user profile
-      const updateData: any = {};
-      if (formData.name !== user.name) updateData.name = formData.name;
-      if (formData.email !== user.email) updateData.email = formData.email;
-      if (formData.currentPassword && formData.newPassword) {
+      const updateData: UpdateData = {};
+      
+      if (formData.name !== user.name) {
+        updateData.name = formData.name;
+      }
+      
+      if (formData.email !== user.email) {
+        updateData.email = formData.email;
+      }
+      
+      if (formData.newPassword) {
         updateData.currentPassword = formData.currentPassword;
         updateData.newPassword = formData.newPassword;
       }
       
-      // Only send request if there are changes
+      // Only make request if there are changes to update
       if (Object.keys(updateData).length > 0) {
-        const profileRes = await fetch(`${BACKEND}/users/profile`, {
-          method: 'PUT',
+        const res = await fetch(`${BACKEND}/users/profile`, {
+          method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${user.token}`
@@ -146,13 +170,14 @@ export default function ProfilePage() {
           body: JSON.stringify(updateData)
         });
         
-        if (!profileRes.ok) {
-          throw new Error('Failed to update profile');
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || 'Failed to update profile');
         }
         
-        const updatedUser = await profileRes.json();
+        const updatedUser = await res.json();
         
-        // Update local storage
+        // Update localStorage
         localStorage.setItem('user', JSON.stringify({
           ...user,
           name: updatedUser.name,
@@ -210,10 +235,13 @@ export default function ProfilePage() {
           <div className="flex flex-col items-center">
             <div className="mb-4 w-40 h-40 rounded-full overflow-hidden bg-background border-2 border-primary/50 relative">
               {imagePreview ? (
-                <img
+                <Image
                   src={imagePreview}
                   alt="Profile"
+                  width={160}
+                  height={160}
                   className="w-full h-full object-cover"
+                  unoptimized={imagePreview.startsWith('data:')}
                 />
               ) : (
                 <div className="flex items-center justify-center w-full h-full">
