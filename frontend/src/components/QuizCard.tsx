@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import QRCode from 'react-qr-code';
+import { Question } from '@/types';
 
 type QuizCardProps = {
   quiz: {
@@ -8,7 +9,7 @@ type QuizCardProps = {
     description?: string;
     published?: boolean;
     joinCode?: string;
-    questions?: any[];
+    questions?: Question[];
   };
   onEdit: (id: string) => void;
   onDelete?: (id: string) => void;
