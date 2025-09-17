@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import QRCode from 'react-qr-code';
-import { User, Quiz, Question, Answer, Option, LeaderboardEntry } from '@/types';
+import { User, Quiz, Question, Answer, Option } from '@/types';
 import { 
   BarChart3, 
   User as UserIcon, 
