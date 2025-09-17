@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { User, Quiz } from '@/types';
+import { User } from '@/types';
 import { 
-  Search, 
   User as UserIcon, 
   BarChart3, 
   Award, 
@@ -19,11 +19,18 @@ import {
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;
 
+interface QuizResult {
+  id: string;
+  quizTitle: string;
+  score: number;
+  rank?: string;
+  completedAt: string;
+}
+
 export default function UserDashboardClient() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [pastQuizzes, setPastQuizzes] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [pastQuizzes, setPastQuizzes] = useState<QuizResult[]>([]);
   const [joinCode, setJoinCode] = useState('');
   const [joinError, setJoinError] = useState('');
   const [joinSuccess, setJoinSuccess] = useState('');
@@ -117,26 +124,12 @@ export default function UserDashboardClient() {
   };
 
   // Add this utility function
-  function isTokenExpired(token: string): boolean {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.exp * 1000 < Date.now();
-    } catch {
-      return true;
-    }
-  }
-
-  // In your main layout or useEffect in dashboard/profile pages:
-  useEffect(() => {
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      const user = JSON.parse(stored);
-      if (!user.token || isTokenExpired(user.token)) {
-        localStorage.removeItem('user');
-        window.location.href = '/login?expired=1';
-      }
-    }
-  }, []);
+  const getPerformanceColor = (score: number) => {
+    if (score >= 90) return 'text-lime-400';
+    if (score >= 70) return 'text-cyan-400';
+    if (score >= 50) return 'text-yellow-400';
+    return 'text-red-400';
+  };
 
   if (loading) {
     return (
@@ -211,11 +204,11 @@ export default function UserDashboardClient() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 h-screen overflow-y-auto">
+      <div className="flex-1 p-6 overflow-y-auto">
         {/* Header */}
-        <div className="p-4 flex justify-between items-center border-b border-cyan-400/20 sticky top-0 bg-slate-900/90 backdrop-blur-md z-10">
-          <h2 className="text-xl font-bold text-cyan-400">
-            {activeNav === 'overview' && 'Overview'}
+        <header className="flex justify-between items-center mb-8 bg-[#2D2D44]/80 p-4 rounded-lg border border-cyan-400/20">
+          <h2 className="text-3xl font-bold text-cyan-400">
+            {activeNav === 'overview' && 'Dashboard Overview'}
             {activeNav === 'join' && 'Join Quiz'}
             {activeNav === 'past' && 'Past Results'}
             {activeNav === 'profile' && 'User Profile'}
@@ -227,340 +220,313 @@ export default function UserDashboardClient() {
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
               {user?.profileImage ? (
-                <img 
+                <Image 
                   src={`${BACKEND}${user.profileImage}`}
-                  alt={user.name}
+                  alt={user.name || 'User'}
+                  width={40}
+                  height={40}
                   className="w-10 h-10 rounded-full object-cover border-2 border-cyan-400"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/40';
-                  }}
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-fuchsia-500/20 border-2 border-cyan-400/60 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-fuchsia-500 flex items-center justify-center text-slate-900 font-bold border-2 border-cyan-400">
                   {user?.name?.charAt(0).toUpperCase() || '?'}
                 </div>
               )}
-              
-              <span className="ml-2 font-medium hidden md:block">{user?.name}</span>
-              <ChevronDown className="h-4 w-4 ml-2 text-gray-400" />
+              <span className="ml-3 font-medium">{user?.name || 'User'}</span>
+              <ChevronDown className="ml-2 h-4 w-4" />
             </div>
             
-            {/* Dropdown Menu */}
             {dropdownOpen && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-[#2D2D44] border border-cyan-400/20 rounded-md shadow-lg shadow-cyan-500/20 z-50">
+              <div className="absolute top-full right-0 mt-2 bg-[#2D2D44] border border-cyan-400/20 rounded-lg shadow-lg z-10 min-w-[200px]">
                 <Link 
                   href="/profile" 
-                  className="flex items-center px-4 py-3 hover:bg-cyan-400/10 text-gray-200"
+                  className="flex items-center px-4 py-3 hover:bg-cyan-400/10 rounded-t-lg"
                 >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Edit Profile
+                  <Settings className="mr-3 h-4 w-4" />
+                  Settings
                 </Link>
-                
-                <div className="border-t border-cyan-400/20"></div>
-                
                 <button 
-                  onClick={handleLogout} 
-                  className="flex items-center w-full text-left px-4 py-3 hover:bg-cyan-400/10 text-gray-200"
+                  onClick={handleLogout}
+                  className="flex items-center w-full px-4 py-3 hover:bg-red-400/10 text-red-400 rounded-b-lg"
                 >
-                  <LogOut className="h-4 w-4 mr-2" />
+                  <LogOut className="mr-3 h-4 w-4" />
                   Logout
                 </button>
               </div>
             )}
           </div>
-        </div>
+        </header>
 
-        {/* Main Content Area */}
-        <div className="p-6">
-          {/* Background decorative elements */}
-          <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-400/5 rounded-full filter blur-3xl animate-pulse-slow"></div>
-            <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-fuchsia-500/5 rounded-full filter blur-3xl animate-pulse-slow delay-1000"></div>
-          </div>
-          
-          {/* Overview Tab Content */}
-          {activeNav === 'overview' && (
-            <>
+        {/* Background effects */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full filter blur-3xl animate-pulse-slow"></div>
+          <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-fuchsia-500/5 rounded-full filter blur-3xl animate-pulse-slow delay-1000"></div>
+        </div>
+        
+        {/* Overview Tab Content */}
+        {activeNav === 'overview' && (
+          <>
+            <div className="mb-8">
+              <form className="flex items-stretch md:w-[70%]" onSubmit={handleJoinQuiz}>
+                <input 
+                  type="text"
+                  value={joinCode}
+                  onChange={e => setJoinCode(e.target.value)}
+                  placeholder="Enter a quiz code to join..."
+                  className="bg-[#3A3A55] text-gray-200 px-4 py-2 rounded-l-md flex-1 border-y border-l border-cyan-400/20 focus:outline-none focus:border-cyan-400"
+                />
+                <button 
+                  type="submit"
+                  className="bg-cyan-400 text-slate-900 px-6 py-2 rounded-r-md font-semibold hover:bg-cyan-500 transition transform hover:scale-105"
+                >
+                  Join Quiz
+                </button>
+              </form>
+              
+              {joinError && (
+                <div className="mt-2 text-red-400 flex items-center">
+                  <X className="h-4 w-4 mr-2" /> {joinError}
+                </div>
+              )}
+              
+              {joinSuccess && (
+                <div className="mt-2 text-lime-400 flex items-center">
+                  <Check className="h-4 w-4 mr-2" /> {joinSuccess}
+                </div>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Recent Activity Card */}
+              <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20 shadow-lg transform transition hover:shadow-cyan-500/30">
+                <h3 className="text-lg font-semibold mb-4 text-cyan-400">Recent Activity</h3>
+                
+                {pastQuizzes && pastQuizzes.length > 0 ? (
+                  <div className="space-y-4">
+                    {pastQuizzes.slice(0, 3).map((result, index) => (
+                      <div key={index} className="border-b border-gray-600/30 pb-3 last:border-b-0 last:pb-0">
+                        <div className="flex justify-between">
+                          <div>
+                            <p className="font-medium">Quiz: {result.quizTitle}</p>
+                            <p className="text-sm text-gray-400">{new Date(result.completedAt).toLocaleDateString()}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-cyan-400">Score: {result.score}</p>
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <Link href={`/results/${result.id}`} className="text-sm text-cyan-400 hover:underline">
+                            View Details
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-400 text-center py-4">
+                    <p>No quiz history yet.</p>
+                    <p className="mt-2">Join a quiz to get started!</p>
+                  </div>
+                )}
+                
+                {pastQuizzes && pastQuizzes.length > 0 && (
+                  <div className="mt-4 text-center">
+                    <button 
+                      onClick={() => setActiveNav('past')}
+                      className="text-cyan-400 hover:underline text-sm"
+                    >
+                      View All Results
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              {/* Performance Snapshot */}
+              <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20 shadow-lg transform transition hover:shadow-cyan-500/30">
+                <h3 className="text-lg font-semibold mb-4 text-cyan-400">Performance Snapshot</h3>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="border-b border-gray-600/30 pb-3">
+                    <p className="text-sm text-gray-400">Average Score</p>
+                    <p className="font-bold text-2xl">{stats.averageScore}</p>
+                  </div>
+                  
+                  <div className="border-b border-gray-600/30 pb-3">
+                    <p className="text-sm text-gray-400">Quizzes Completed</p>
+                    <p className="font-bold text-2xl">{stats.quizzesCompleted}</p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm text-gray-400">Rank</p>
+                    <p className="font-bold text-2xl text-fuchsia-500">{stats.rank}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Popular Quizzes Section */}
+            <div className="mt-8">
+              <h3 className="text-xl font-semibold mb-4 text-cyan-400">Popular Quizzes</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[1, 2, 3].map((_, i) => (
+                  <div key={i} className="bg-[#2D2D44]/80 p-4 rounded-lg border border-cyan-400/20 cursor-pointer transform transition hover:scale-[1.03] hover:shadow-cyan-500/20">
+                    <h4 className="font-semibold">Web Development Fundamentals</h4>
+                    <p className="text-sm text-gray-400 mt-1">Test your knowledge of HTML, CSS, and JavaScript basics</p>
+                    <div className="flex justify-between items-center mt-3">
+                      <span className="text-xs bg-cyan-400/20 text-cyan-400 px-2 py-1 rounded">20 questions</span>
+                      <span className="text-xs">400+ participants</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+        
+        {/* Join Quiz Tab Content */}
+        {activeNav === 'join' && (
+          <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20">
+            <h3 className="text-xl font-semibold mb-6">Join a Quiz</h3>
+            
+            <div className="max-w-md mx-auto">
               <div className="mb-8">
-                <form className="flex items-stretch md:w-[70%]" onSubmit={handleJoinQuiz}>
+                <h4 className="font-medium mb-3">Enter Quiz Code</h4>
+                <form className="flex flex-col space-y-4" onSubmit={handleJoinQuiz}>
                   <input 
                     type="text"
                     value={joinCode}
                     onChange={e => setJoinCode(e.target.value)}
-                    placeholder="Enter a quiz code to join..."
-                    className="bg-[#3A3A55] text-gray-200 px-4 py-2 rounded-l-md flex-1 border-y border-l border-cyan-400/20 focus:outline-none focus:border-cyan-400"
+                    placeholder="Enter the 6-digit code here"
+                    className="bg-[#3A3A55] text-gray-200 px-4 py-3 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400 text-center uppercase tracking-widest text-xl"
+                    maxLength={6}
                   />
+                  
                   <button 
                     type="submit"
-                    className="bg-cyan-400 text-slate-900 px-6 py-2 rounded-r-md font-semibold hover:bg-cyan-500 transition transform hover:scale-105"
+                    className="bg-cyan-400 text-slate-900 py-3 rounded-md font-semibold hover:bg-cyan-500 transition transform hover:scale-105"
                   >
                     Join Quiz
                   </button>
                 </form>
                 
                 {joinError && (
-                  <div className="mt-2 text-red-400 flex items-center">
-                    <X className="h-4 w-4 mr-2" /> {joinError}
-                  </div>
-                )}
-                
-                {joinSuccess && (
-                  <div className="mt-2 text-lime-400 flex items-center">
-                    <Check className="h-4 w-4 mr-2" /> {joinSuccess}
-                  </div>
+                  <div className="mt-2 text-red-400 text-center">{joinError}</div>
                 )}
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Recent Activity Card */}
-                <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20 shadow-lg transform transition hover:shadow-cyan-500/30">
-                  <h3 className="text-lg font-semibold mb-4 text-cyan-400">Recent Activity</h3>
-                  
-                  {pastQuizzes && pastQuizzes.length > 0 ? (
-                    <div className="space-y-4">
-                      {pastQuizzes.slice(0, 3).map((result, index) => (
-                        <div key={index} className="border-b border-gray-600/30 pb-3 last:border-b-0 last:pb-0">
-                          <div className="flex justify-between">
-                            <div>
-                              <p className="font-medium">Quiz: {result.quizTitle}</p>
-                              <p className="text-sm text-gray-400">{new Date(result.completedAt).toLocaleDateString()}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold text-cyan-400">Score: {result.score}</p>
-                            </div>
-                          </div>
-                          <div className="mt-2">
-                            <Link href={`/results/${result.id}`} className="text-sm text-cyan-400 hover:underline">
-                              View Details
-                            </Link>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-gray-400 text-center py-4">
-                      <p>No quiz history yet.</p>
-                      <p className="mt-2">Join a quiz to get started!</p>
-                    </div>
-                  )}
-                  
-                  {pastQuizzes && pastQuizzes.length > 0 && (
-                    <div className="mt-4 text-center">
-                      <button 
-                        onClick={() => setActiveNav('past')}
-                        className="text-cyan-400 hover:underline text-sm"
-                      >
-                        View All Results
-                      </button>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Performance Snapshot */}
-                <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20 shadow-lg transform transition hover:shadow-cyan-500/30">
-                  <h3 className="text-lg font-semibold mb-4 text-cyan-400">Performance Snapshot</h3>
-                  
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="border-b border-gray-600/30 pb-3">
-                      <p className="text-sm text-gray-400">Average Score</p>
-                      <p className="font-bold text-2xl">{stats.averageScore}</p>
-                    </div>
-                    
-                    <div className="border-b border-gray-600/30 pb-3">
-                      <p className="text-sm text-gray-400">Quizzes Completed</p>
-                      <p className="font-bold text-2xl">{stats.quizzesCompleted}</p>
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm text-gray-400">Rank</p>
-                      <p className="font-bold text-2xl text-fuchsia-500">{stats.rank}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Popular Quizzes Section */}
-              <div className="mt-8">
-                <h3 className="text-xl font-semibold mb-4 text-cyan-400">Popular Quizzes</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[1, 2, 3].map((_, i) => (
-                    <div key={i} className="bg-[#2D2D44]/80 p-4 rounded-lg border border-cyan-400/20 cursor-pointer transform transition hover:scale-[1.03] hover:shadow-cyan-500/20">
-                      <h4 className="font-semibold">Web Development Fundamentals</h4>
-                      <p className="text-sm text-gray-400 mt-1">Test your knowledge of HTML, CSS, and JavaScript basics</p>
-                      <div className="flex justify-between items-center mt-3">
-                        <span className="text-xs bg-cyan-400/20 text-cyan-400 px-2 py-1 rounded">20 questions</span>
-                        <span className="text-xs">400+ participants</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-          
-          {/* Join Quiz Tab Content */}
-          {activeNav === 'join' && (
-            <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20">
-              <h3 className="text-xl font-semibold mb-6">Join a Quiz</h3>
-              
-              <div className="max-w-md mx-auto">
-                <div className="mb-8">
-                  <h4 className="font-medium mb-3">Enter Quiz Code</h4>
-                  <form className="flex flex-col space-y-4" onSubmit={handleJoinQuiz}>
-                    <input 
-                      type="text"
-                      value={joinCode}
-                      onChange={e => setJoinCode(e.target.value)}
-                      placeholder="Enter the 6-digit code here"
-                      className="bg-[#3A3A55] text-gray-200 px-4 py-3 rounded-md border border-cyan-400/20 focus:outline-none focus:border-cyan-400 text-center uppercase tracking-widest text-xl"
-                      maxLength={6}
-                    />
-                    
-                    <button 
-                      type="submit"
-                      className="bg-cyan-400 text-slate-900 py-3 rounded-md font-semibold hover:bg-cyan-500 transition transform hover:scale-105"
-                    >
-                      Join Quiz
-                    </button>
-                  </form>
-                  
-                  {joinError && (
-                    <div className="mt-2 text-red-400 text-center">{joinError}</div>
-                  )}
-                </div>
-                
-                <div className="text-center">
-                  <p className="text-gray-400 mb-4">Or scan a QR code</p>
-                  <div className="bg-white inline-block p-3 rounded">
-                    {/* Placeholder for QR code scanner */}
-                    <div className="w-48 h-48 bg-gray-200 flex items-center justify-center text-gray-500">
-                      QR Scanner
-                    </div>
+              <div className="text-center">
+                <p className="text-gray-400 mb-4">Or scan a QR code</p>
+                <div className="bg-white inline-block p-3 rounded">
+                  {/* Placeholder for QR code scanner */}
+                  <div className="w-48 h-48 bg-gray-200 flex items-center justify-center text-gray-500">
+                    QR Scanner
                   </div>
                 </div>
               </div>
             </div>
-          )}
-          
-          {/* Past Results Tab Content */}
-          {activeNav === 'past' && (
-            <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20">
-              <h3 className="text-xl font-semibold mb-6">Your Quiz History</h3>
-              
-              {pastQuizzes && pastQuizzes.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="text-left border-b border-cyan-400/20">
-                        <th className="pb-2">Quiz Name</th>
-                        <th className="pb-2">Date</th>
-                        <th className="pb-2">Score</th>
-                        <th className="pb-2">Rank</th>
-                        <th className="pb-2">Actions</th>
+          </div>
+        )}
+        
+        {/* Past Results Tab Content */}
+        {activeNav === 'past' && (
+          <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20">
+            <h3 className="text-xl font-semibold mb-6">Your Quiz History</h3>
+            
+            {pastQuizzes && pastQuizzes.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left border-b border-cyan-400/20">
+                      <th className="pb-2">Quiz Name</th>
+                      <th className="pb-2">Date</th>
+                      <th className="pb-2">Score</th>
+                      <th className="pb-2">Rank</th>
+                      <th className="pb-2">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pastQuizzes.map((result, index) => (
+                      <tr key={index} className="border-b border-gray-600/30">
+                        <td className="py-3">{result.quizTitle}</td>
+                        <td className="py-3">{new Date(result.completedAt).toLocaleDateString()}</td>
+                        <td className="py-3 font-medium text-cyan-400">{result.score}</td>
+                        <td className="py-3">{result.rank || '-'}</td>
+                        <td className="py-3">
+                          <Link href={`/results/${result.id}`} className="text-cyan-400 hover:underline">
+                            View Details
+                          </Link>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {pastQuizzes.map((result, index) => (
-                        <tr key={index} className="border-b border-gray-600/30">
-                          <td className="py-3">{result.quizTitle}</td>
-                          <td className="py-3">{new Date(result.completedAt).toLocaleDateString()}</td>
-                          <td className="py-3 font-medium text-cyan-400">{result.score}</td>
-                          <td className="py-3">{result.rank || '-'}</td>
-                          <td className="py-3">
-                            <Link href={`/results/${result.id}`} className="text-cyan-400 hover:underline">
-                              View Details
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-gray-400 text-center py-8">
-                  <p className="text-lg">No quiz history yet.</p>
-                  <p className="mt-2">Join a quiz to see your results here!</p>
-                  <button 
-                    onClick={() => setActiveNav('join')}
-                    className="mt-4 px-6 py-2 bg-cyan-400/20 text-cyan-400 rounded-md hover:bg-cyan-400/30 transition"
-                  >
-                    Join a Quiz
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {/* Profile Tab Content */}
-          {activeNav === 'profile' && (
-            <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20">
-              <h3 className="text-xl font-semibold mb-6">Your Profile</h3>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-gray-400 text-center py-8">
+                <p className="text-lg">No quiz history yet.</p>
+                <p className="mt-2">Join a quiz to see your results here!</p>
+                <button 
+                  onClick={() => setActiveNav('join')}
+                  className="mt-4 px-6 py-2 bg-cyan-400/20 text-cyan-400 rounded-md hover:bg-cyan-400/30 transition"
+                >
+                  Join a Quiz
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Profile Tab Content */}
+        {activeNav === 'profile' && (
+          <div className="bg-[#2D2D44] p-6 rounded-lg border border-cyan-400/20">
+            <h3 className="text-xl font-semibold mb-6">Your Profile</h3>
+            
+            <div className="max-w-md mx-auto">
+              <div className="flex flex-col items-center mb-6">
+                {user?.profileImage ? (
+                  <Image 
+                    src={`${BACKEND}${user.profileImage}`}
+                    alt={user.name || 'User'}
+                    width={96}
+                    height={96}
+                    className="w-24 h-24 rounded-full object-cover border-2 border-cyan-400 mb-4"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-fuchsia-500/20 border-2 border-cyan-400 flex items-center justify-center font-bold text-3xl mb-4">
+                    {user?.name?.charAt(0).toUpperCase() || '?'}
+                  </div>
+                )}
+                
+                <h4 className="text-xl font-medium">{user?.name}</h4>
+                <p className="text-gray-400">{user?.email}</p>
+              </div>
               
-              <div className="max-w-md mx-auto">
-                <div className="flex flex-col items-center mb-6">
-                  {user?.profileImage ? (
-                    <img 
-                      src={`${BACKEND}${user.profileImage}`}
-                      alt={user.name}
-                      className="w-24 h-24 rounded-full object-cover border-2 border-cyan-400 mb-4"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/96';
-                      }}
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-fuchsia-500/20 border-2 border-cyan-400 flex items-center justify-center font-bold text-3xl mb-4">
-                      {user?.name?.charAt(0).toUpperCase() || '?'}
-                    </div>
-                  )}
-                  
-                  <h4 className="text-xl font-medium">{user?.name}</h4>
-                  <p className="text-gray-400">{user?.email}</p>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="border border-gray-600/30 rounded p-3">
+                  <p className="text-sm text-gray-400">Username</p>
+                  <p className="font-medium">{user?.name}</p>
                 </div>
                 
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm text-gray-400">Username</label>
-                    <input 
-                      type="text"
-                      value={user?.name || ''}
-                      disabled
-                      className="bg-[#3A3A55] w-full text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm text-gray-400">Email</label>
-                    <input 
-                      type="email"
-                      value={user?.email || ''}
-                      disabled
-                      className="bg-[#3A3A55] w-full text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm text-gray-400">Role</label>
-                    <input 
-                      type="text"
-                      value={user?.role || ''}
-                      disabled
-                      className="bg-[#3A3A55] w-full text-gray-200 px-4 py-2 rounded-md border border-cyan-400/20"
-                    />
-                  </div>
-                  
-                  <div className="mt-4">
-                    <Link 
-                      href="/profile/edit" 
-                      className="bg-cyan-400 text-slate-900 px-6 py-2 rounded-md font-semibold hover:bg-cyan-500 transition transform hover:scale-105 inline-block"
-                    >
-                      Edit Profile
-                    </Link>
-                  </div>
+                <div className="border border-gray-600/30 rounded p-3">
+                  <p className="text-sm text-gray-400">Email</p>
+                  <p className="font-medium">{user?.email}</p>
                 </div>
+                
+                <div className="border border-gray-600/30 rounded p-3">
+                  <p className="text-sm text-gray-400">Role</p>
+                  <p className="font-medium">{user?.role}</p>
+                </div>
+                
+                <Link 
+                  href="/profile"
+                  className="mt-4 bg-cyan-400/20 text-cyan-400 py-2 px-4 rounded-md hover:bg-cyan-400/30 transition text-center block"
+                >
+                  Edit Profile
+                </Link>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
