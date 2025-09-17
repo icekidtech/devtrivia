@@ -16,6 +16,7 @@ export default function SignupPage() {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'error' | 'success'>('error');
   const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -36,6 +37,7 @@ export default function SignupPage() {
     e.preventDefault();
     setMessage('');
     setUsernameSuggestions([]);
+    setLoading(true);
     
     try {
       const response = await fetch(`${BACKEND}/auth/signup`, {
@@ -89,6 +91,8 @@ export default function SignupPage() {
     } catch {
       setMessageType('error');
       setMessage('Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -182,8 +186,13 @@ export default function SignupPage() {
                 <label>Role</label>
               </div>
 
-              <button type="submit" className="btn animation" style={{"--i": 5, "--j": 26} as React.CSSProperties}>
-                Sign Up
+              <button 
+                type="submit" 
+                className="btn animation" 
+                style={{"--i": 5, "--j": 26} as React.CSSProperties}
+                disabled={loading}
+              >
+                {loading ? 'Signing up...' : 'Sign Up'}
               </button>
               
               <div className="logreg-link animation" style={{"--i": 6, "--j": 27} as React.CSSProperties}>
