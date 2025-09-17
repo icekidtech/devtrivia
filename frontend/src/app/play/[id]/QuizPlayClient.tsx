@@ -12,7 +12,7 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [quiz, setQuiz] = useState<Quiz | null>(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [currentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +26,6 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
   } | null>(null);
   const [countdown, setCountdown] = useState(3); // Countdown before starting quiz
   const [quizStarted, setQuizStarted] = useState(false);
-  const [questionStartTime, setQuestionStartTime] = useState<number | null>(null);
   const [questionTime, setQuestionTime] = useState<number>(20);
 
   // Move this declaration up here before it's used in any useEffect
@@ -110,7 +109,6 @@ export default function QuizPlayClient({ quizId }: { quizId: string }) {
     
     // Reset timer when question changes
     setTimeRemaining(questionTime);
-    setQuestionStartTime(Date.now());
     
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
