@@ -128,7 +128,7 @@ export default function LoginPage() {
               </button>
               
               <div className="logreg-link animation" style={{"--i": 5, "--j": 23} as React.CSSProperties}>
-                <p>Don't have an account? <Link href="/signup" className="register-link text-cyan-400">Sign Up</Link></p>
+                <p>Don&apos;t have an account? <Link href="/signup" className="register-link text-cyan-400">Sign Up</Link></p>
               </div>
             </form>
           </div>
