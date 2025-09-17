@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { User } from '@/types';
 import { CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -30,7 +29,6 @@ interface QuizResult {
 }
 
 export default function QuizResultsClient({ resultId }: { resultId: string }) {
-  const [user, setUser] = useState<User | null>(null);
   const [result, setResult] = useState<QuizResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +45,6 @@ export default function QuizResultsClient({ resultId }: { resultId: string }) {
         }
         
         const userData = JSON.parse(storedUser);
-        setUser(userData);
         
         // Fetch result data
         const res = await fetch(`${BACKEND}/results/${resultId}`, {
